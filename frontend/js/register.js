@@ -81,7 +81,10 @@ form.addEventListener("submit", async function (event) {
 
         if (data.success) {
             showMessage(data.message, "success");
-            form.reset();
+
+            setTimeout(() => {
+                window.location.href = "/1kR-Webshop/frontend/sites/index.html";
+            }, 1000);
         } else {
             showMessage(data.message, "danger");
         }
