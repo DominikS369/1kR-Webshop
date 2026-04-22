@@ -186,6 +186,16 @@ switch ($method) {
         break;
 
 
+    case "logout":
+        session_start();
+        session_unset();
+        session_destroy();
+
+        $response["success"] = true;
+        $response["message"] = "Logout erfolgreich";
+        break;
+
+
     default:
         break;
 }
