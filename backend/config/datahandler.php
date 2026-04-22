@@ -4,34 +4,50 @@ header("Content-Type: application/json");
 
 require_once "dbaccess.php";
 
-$method = $_GET["method"] ?? "";
+function sendJson(bool $success, string $message, array $extra = []): void
+{
+    echo json_encode(array_merge([
+        "success" => $success,
+        "message" => $message
+    ], $extra));
+    exit;
+}
 
-$response = [
-    "success" => false,
-    "message" => "Unknown method"
-];
+function requireMethod(string $method): void
+{
+    if ($_SERVER["REQUEST_METHOD"] !== $method) {
+        sendJson(false, "Nur $method erlaubt");
+    }
+}
+
+function getJsonInput(): array
+{
+    $input = json_decode(file_get_contents("php://input"), true);
+
+    if (!is_array($input)) {
+        sendJson(false, "Keine gültigen Daten erhalten");
+    }
+
+    return $input;
+}
+
+function startSessionIfNeeded(): void
+{
+    if (session_status() === PHP_SESSION_NONE) {
+        session_start();
+    }
+}
+
+$method = $_GET["method"] ?? "";
 
 switch ($method) {
 
     case "test":
-        $response["success"] = true;
-        $response["message"] = "API läuft";
-        break;
+        sendJson(true, "API läuft");
 
     case "register":
-        if ($_SERVER["REQUEST_METHOD"] !== "POST") {
-            $response["message"] = "Nur POST erlaubt";
-            echo json_encode($response);
-            exit;
-        }
-
-        $input = json_decode(file_get_contents("php://input"), true);
-
-        if (!$input) {
-            $response["message"] = "Keine gültigen Daten erhalten";
-            echo json_encode($response);
-            exit;
-        }
+        requireMethod("POST");
+        $input = getJsonInput();
 
         $salutation = trim($input["salutation"] ?? "");
         $firstname = trim($input["firstname"] ?? "");
@@ -39,7 +55,7 @@ switch ($method) {
         $address = trim($input["address"] ?? "");
         $zip = trim($input["zip"] ?? "");
         $city = trim($input["city"] ?? "");
-        $email = trim($input["email"] ?? "");
+        $email = strtolower(trim($input["email"] ?? ""));
         $username = trim($input["username"] ?? "");
         $password = $input["password"] ?? "";
         $password2 = $input["password2"] ?? "";
@@ -50,21 +66,15 @@ switch ($method) {
             $zip === "" || $city === "" || $email === "" ||
             $username === "" || $password === "" || $password2 === ""
         ) {
-            $response["message"] = "Bitte alle Pflichtfelder ausfüllen";
-            echo json_encode($response);
-            exit;
+            sendJson(false, "Bitte alle Pflichtfelder ausfüllen");
         }
 
         if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-            $response["message"] = "Ungültige E-Mail-Adresse";
-            echo json_encode($response);
-            exit;
+            sendJson(false, "Ungültige E-Mail-Adresse");
         }
 
         if ($password !== $password2) {
-            $response["message"] = "Passwörter stimmen nicht überein";
-            echo json_encode($response);
-            exit;
+            sendJson(false, "Passwörter stimmen nicht überein");
         }
 
         $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
@@ -78,9 +88,7 @@ switch ($method) {
         $checkResult = $checkStmt->get_result();
 
         if ($checkResult->num_rows > 0) {
-            $response["message"] = "E-Mail oder Benutzername bereits vergeben";
-            echo json_encode($response);
-            exit;
+            sendJson(false, "E-Mail oder Benutzername bereits vergeben");
         }
 
         $stmt = $conn->prepare("
@@ -104,100 +112,113 @@ switch ($method) {
         );
 
         if ($stmt->execute()) {
-            $response["success"] = true;
-            $response["message"] = "Registrierung erfolgreich";
-        } else {
-            $response["message"] = "Fehler beim Speichern";
+            sendJson(true, "Registrierung erfolgreich");
         }
 
-        break;
-
+        sendJson(false, "Fehler beim Speichern");
 
     case "login":
-
-        if ($_SERVER["REQUEST_METHOD"] !== "POST") {
-            $response["message"] = "Nur POST erlaubt";
-            echo json_encode($response);
-            exit;
-        }
-
-        $input = json_decode(file_get_contents("php://input"), true);
+        requireMethod("POST");
+        $input = getJsonInput();
 
         $username = trim($input["username"] ?? "");
         $password = $input["password"] ?? "";
+        $remember = (bool)($input["remember"] ?? false);
 
         if ($username === "" || $password === "") {
-            $response["message"] = "Bitte Username und Passwort eingeben";
-            echo json_encode($response);
-            exit;
+            sendJson(false, "Bitte Username und Passwort eingeben");
         }
+
+        startSessionIfNeeded();
 
         $db = new DBAccess();
         $conn = $db->getConnection();
 
-        $stmt = $conn->prepare("SELECT * FROM users WHERE username = ? OR email = ?");
+        $stmt = $conn->prepare("
+            SELECT id, username, password, is_admin, is_active
+            FROM users
+            WHERE username = ? OR email = ?
+        ");
         $stmt->bind_param("ss", $username, $username);
         $stmt->execute();
 
         $result = $stmt->get_result();
 
         if ($result->num_rows === 0) {
-            $response["message"] = "User nicht gefunden";
-            echo json_encode($response);
-            exit;
+            sendJson(false, "User nicht gefunden");
         }
 
         $user = $result->fetch_assoc();
 
-        if (!password_verify($password, $user["password"])) {
-            $response["message"] = "Falsches Passwort";
-            echo json_encode($response);
-            exit;
+        if ((int)$user["is_active"] !== 1) {
+            sendJson(false, "Benutzer ist deaktiviert");
         }
 
-        session_start();
+        if (!password_verify($password, $user["password"])) {
+            sendJson(false, "Falsches Passwort");
+        }
 
         $_SESSION["user_id"] = $user["id"];
         $_SESSION["username"] = $user["username"];
         $_SESSION["is_admin"] = $user["is_admin"];
 
-        $response["success"] = true;
-        $response["message"] = "Login erfolgreich";
-
-        break;
-
-
-    case "checkSession":
-
-        session_start();
-
-        if (isset($_SESSION["user_id"])) {
-            $response["success"] = true;
-            $response["user"] = [
-                "id" => $_SESSION["user_id"],
-                "username" => $_SESSION["username"],
-                "is_admin" => $_SESSION["is_admin"]
-            ];
-        } else {
-            $response["success"] = false;
-            $response["message"] = "Nicht eingeloggt";
+        if ($remember) {
+            setcookie("remember_user", (string)$user["id"], time() + (60 * 60 * 24 * 30), "/");
         }
 
-        break;
+        sendJson(true, "Login erfolgreich");
 
+    case "checkSession":
+        startSessionIfNeeded();
+
+        if (!isset($_SESSION["user_id"]) && isset($_COOKIE["remember_user"])) {
+            $userId = (int)$_COOKIE["remember_user"];
+
+            $db = new DBAccess();
+            $conn = $db->getConnection();
+
+            $stmt = $conn->prepare("
+                SELECT id, username, is_admin
+                FROM users
+                WHERE id = ? AND is_active = 1
+            ");
+            $stmt->bind_param("i", $userId);
+            $stmt->execute();
+
+            $result = $stmt->get_result();
+
+            if ($result->num_rows === 1) {
+                $user = $result->fetch_assoc();
+
+                $_SESSION["user_id"] = $user["id"];
+                $_SESSION["username"] = $user["username"];
+                $_SESSION["is_admin"] = $user["is_admin"];
+            } else {
+                setcookie("remember_user", "", time() - 3600, "/");
+            }
+        }
+
+        if (isset($_SESSION["user_id"])) {
+            sendJson(true, "Eingeloggt", [
+                "user" => [
+                    "id" => $_SESSION["user_id"],
+                    "username" => $_SESSION["username"],
+                    "is_admin" => $_SESSION["is_admin"]
+                ]
+            ]);
+        }
+
+        sendJson(false, "Nicht eingeloggt");
 
     case "logout":
-        session_start();
+        startSessionIfNeeded();
         session_unset();
         session_destroy();
 
-        $response["success"] = true;
-        $response["message"] = "Logout erfolgreich";
-        break;
+        setcookie("remember_user", "", time() - 3600, "/");
 
+        sendJson(true, "Logout erfolgreich");
 
     default:
-        break;
+        sendJson(false, "Unknown method");
 }
-
-echo json_encode($response);
