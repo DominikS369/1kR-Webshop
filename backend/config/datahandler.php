@@ -167,6 +167,25 @@ switch ($method) {
         break;
 
 
+    case "checkSession":
+
+        session_start();
+
+        if (isset($_SESSION["user_id"])) {
+            $response["success"] = true;
+            $response["user"] = [
+                "id" => $_SESSION["user_id"],
+                "username" => $_SESSION["username"],
+                "is_admin" => $_SESSION["is_admin"]
+            ];
+        } else {
+            $response["success"] = false;
+            $response["message"] = "Nicht eingeloggt";
+        }
+
+        break;
+
+
     default:
         break;
 }
