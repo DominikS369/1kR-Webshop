@@ -19,21 +19,50 @@ form.addEventListener("submit", async function (event) {
 
     const password = document.getElementById("password").value;
     const password2 = document.getElementById("password2").value;
+    const username = document.getElementById("username").value.trim();
+    const zip = document.getElementById("zip").value.trim();
+    const firstname = document.getElementById("firstname").value.trim();
+    const lastname = document.getElementById("lastname").value.trim();
 
     if (password !== password2) {
         showMessage("Die Passwörter stimmen nicht überein.");
         return;
     }
 
+    if (password.length < 6) {
+        showMessage("Das Passwort muss mindestens 6 Zeichen lang sein.");
+        return;
+    }
+
+    if (username.length < 3) {
+        showMessage("Der Benutzername muss mindestens 3 Zeichen lang sein.");
+        return;
+    }
+
+    if (!/^\d{4,5}$/.test(zip)) {
+        showMessage("Bitte eine gültige PLZ eingeben.");
+        return;
+    }
+
+    if (!/^[A-Za-zÄÖÜäöüß\s-]+$/.test(firstname)) {
+        showMessage("Der Vorname enthält ungültige Zeichen.");
+        return;
+    }
+
+    if (!/^[A-Za-zÄÖÜäöüß\s-]+$/.test(lastname)) {
+        showMessage("Der Nachname enthält ungültige Zeichen.");
+        return;
+    }
+
     const formData = {
         salutation: document.getElementById("salutation").value,
-        firstname: document.getElementById("firstname").value.trim(),
-        lastname: document.getElementById("lastname").value.trim(),
+        firstname: firstname,
+        lastname: lastname,
         address: document.getElementById("address").value.trim(),
-        zip: document.getElementById("zip").value.trim(),
+        zip: zip,
         city: document.getElementById("city").value.trim(),
         email: document.getElementById("email").value.trim(),
-        username: document.getElementById("username").value.trim(),
+        username: username,
         password: password,
         password2: password2,
         payment_info: document.getElementById("payment_info").value.trim()
