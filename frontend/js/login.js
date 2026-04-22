@@ -49,6 +49,7 @@ form.addEventListener("submit", async function (event) {
 
     const username = document.getElementById("username").value.trim();
     const password = document.getElementById("password").value;
+    const remember = document.getElementById("remember").checked;
 
     try {
         const response = await fetch(`${API_BASE}?method=login`, {
@@ -59,7 +60,8 @@ form.addEventListener("submit", async function (event) {
             credentials: "include",
             body: JSON.stringify({
                 username: username,
-                password: password
+                password: password,
+                remember: remember
             })
         });
 
