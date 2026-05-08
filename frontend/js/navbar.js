@@ -17,21 +17,21 @@ async function renderNavbar() {
     }
 
     let links = `
-        <a class="navbar-brand" href="/1kR-Webshop/frontend/sites/index.html">Tausend Rosen</a>
+        <a class="navbar-brand" href="index.html">Tausend Rosen</a>
         <div class="d-flex gap-3 align-items-center">
     `;
 
     if (!user) {
         links += `
-            <a href="/1kR-Webshop/frontend/sites/index.html">Home</a>
-            <a href="/1kR-Webshop/frontend/sites/products.html">Produkte</a>
-            <a href="/1kR-Webshop/frontend/sites/cart.html">Warenkorb</a>
-            <a href="/1kR-Webshop/frontend/sites/login.html">Login</a>
-            <a href="/1kR-Webshop/frontend/sites/register.html">Registrieren</a>
+            <a href="index.html">Home</a>
+            <a href="products.html">Produkte</a>
+            <a href="cart.html">Warenkorb</a>
+            <a href="login.html">Login</a>
+            <a href="register.html">Registrieren</a>
         `;
-    } else if (user.is_admin == 1) {
+    } else if (Number(user.is_admin) === 1) {
         links += `
-            <a href="/1kR-Webshop/frontend/sites/index.html">Home</a>
+            <a href="index.html">Home</a>
             <a href="#">Produkte bearbeiten</a>
             <a href="#">Kunden bearbeiten</a>
             <a href="#">Gutscheine verwalten</a>
@@ -40,10 +40,10 @@ async function renderNavbar() {
         `;
     } else {
         links += `
-            <a href="/1kR-Webshop/frontend/sites/index.html">Home</a>
-            <a href="/1kR-Webshop/frontend/sites/products.html">Produkte</a>
+            <a href="index.html">Home</a>
+            <a href="products.html">Produkte</a>
             <a href="#">Mein Konto</a>
-            <a href="/1kR-Webshop/frontend/sites/cart.html">Warenkorb</a>
+            <a href="cart.html">Warenkorb</a>
             <span>Eingeloggt als: ${user.username}</span>
             <button id="logoutBtn" class="btn btn-sm btn-danger">Logout</button>
         `;
@@ -60,7 +60,7 @@ async function renderNavbar() {
             await fetch(`${API_BASE}?method=logout`, {
                 credentials: "include"
             });
-            window.location.href = "/1kR-Webshop/frontend/sites/index.html";
+            window.location.href = "index.html";
         });
     }
 }
