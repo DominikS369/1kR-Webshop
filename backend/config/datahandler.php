@@ -219,6 +219,152 @@ switch ($method) {
 
         sendJson(true, "Logout erfolgreich");
 
+    case "getCategories":
+        $db = new DBAccess();
+        $conn = $db->getConnection();
+
+        $result = $conn->query("SELECT id, name FROM categories ORDER BY id");
+
+        $categories = [];
+        while ($row = $result->fetch_assoc()) {
+            $row["id"] = (int)$row["id"];
+            $categories[] = $row;
+        }
+
+        sendJson(true, "OK", ["data" => $categories]);
+
+    case "getProducts":
+        $categoryId = isset($_GET["category"]) ? (int)$_GET["category"] : 0;
+
+        $db = new DBAccess();
+        $conn = $db->getConnection();
+
+        if ($categoryId > 0) {
+            $stmt = $conn->prepare("
+                SELECT p.id, p.name, p.description, p.price, p.rating, p.image,
+                       p.category_id, c.name AS category_name
+                FROM products p
+                JOIN categories c ON c.id = p.category_id
+                WHERE p.is_active = 1 AND p.category_id = ?
+                ORDER BY p.id
+            ");
+            $stmt->bind_param("i", $categoryId);
+        } else {
+            $stmt = $conn->prepare("
+                SELECT p.id, p.name, p.description, p.price, p.rating, p.image,
+                       p.category_id, c.name AS category_name
+                FROM products p
+                JOIN categories c ON c.id = p.category_id
+                WHERE p.is_active = 1
+                ORDER BY p.id
+            ");
+        }
+
+        $stmt->execute();
+        $result = $stmt->get_result();
+
+        $products = [];
+        while ($row = $result->fetch_assoc()) {
+            $row["price"] = (float)$row["price"];
+            $row["rating"] = (float)$row["rating"];
+            $products[] = $row;
+        }
+
+        sendJson(true, "OK", ["data" => $products]);
+
+    case "addToCart":
+        requireMethod("POST");
+        $input = getJsonInput();
+
+        $productId = (int)($input["product_id"] ?? 0);
+        if ($productId <= 0) {
+            sendJson(false, "Ungültige Produkt-ID");
+        }
+
+        startSessionIfNeeded();
+
+        $userId = $_SESSION["user_id"] ?? null;
+        $sessionId = session_id();
+
+        $db = new DBAccess();
+        $conn = $db->getConnection();
+
+        if ($userId) {
+            $stmt = $conn->prepare("SELECT id, quantity FROM cart WHERE product_id = ? AND user_id = ?");
+            $stmt->bind_param("ii", $productId, $userId);
+        } else {
+            $stmt = $conn->prepare("SELECT id, quantity FROM cart WHERE product_id = ? AND session_id = ? AND user_id IS NULL");
+            $stmt->bind_param("is", $productId, $sessionId);
+        }
+
+        $stmt->execute();
+        $existing = $stmt->get_result()->fetch_assoc();
+
+        if ($existing) {
+            $newQty = (int)$existing["quantity"] + 1;
+            $update = $conn->prepare("UPDATE cart SET quantity = ? WHERE id = ?");
+            $update->bind_param("ii", $newQty, $existing["id"]);
+            $update->execute();
+
+            sendJson(true, "Produkt hinzugefügt", ["data" => ["quantity" => $newQty]]);
+        }
+
+        if ($userId) {
+            $insert = $conn->prepare("INSERT INTO cart (user_id, product_id, quantity) VALUES (?, ?, 1)");
+            $insert->bind_param("ii", $userId, $productId);
+        } else {
+            $insert = $conn->prepare("INSERT INTO cart (session_id, product_id, quantity) VALUES (?, ?, 1)");
+            $insert->bind_param("si", $sessionId, $productId);
+        }
+
+        $insert->execute();
+
+        sendJson(true, "Produkt hinzugefügt", ["data" => ["quantity" => 1]]);
+
+    case "getCart":
+        startSessionIfNeeded();
+
+        $userId = $_SESSION["user_id"] ?? null;
+        $sessionId = session_id();
+
+        $db = new DBAccess();
+        $conn = $db->getConnection();
+
+        if ($userId) {
+            $stmt = $conn->prepare("
+                SELECT c.id, c.product_id, c.quantity, p.name, p.price, p.image
+                FROM cart c
+                JOIN products p ON p.id = c.product_id
+                WHERE c.user_id = ?
+                ORDER BY c.added_at DESC
+            ");
+            $stmt->bind_param("i", $userId);
+        } else {
+            $stmt = $conn->prepare("
+                SELECT c.id, c.product_id, c.quantity, p.name, p.price, p.image
+                FROM cart c
+                JOIN products p ON p.id = c.product_id
+                WHERE c.session_id = ? AND c.user_id IS NULL
+                ORDER BY c.added_at DESC
+            ");
+            $stmt->bind_param("s", $sessionId);
+        }
+
+        $stmt->execute();
+        $result = $stmt->get_result();
+
+        $items = [];
+        $total = 0;
+        while ($row = $result->fetch_assoc()) {
+            $row["price"] = (float)$row["price"];
+            $row["quantity"] = (int)$row["quantity"];
+            $row["subtotal"] = round($row["price"] * $row["quantity"], 2);
+            $total += $row["subtotal"];
+            $items[] = $row;
+        }
+
+        sendJson(true, "OK", ["data" => ["items" => $items, "total" => round($total, 2)]]);
+
     default:
         sendJson(false, "Unknown method");
 }
