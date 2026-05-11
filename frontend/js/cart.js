@@ -50,21 +50,23 @@ function renderCart(items, total) {
     `;
 }
 
-async function loadCart() {
-    try {
-        const response = await fetch(`${API_BASE}?method=getCart`, { credentials: "include" });
-        const data = await response.json();
-
-        if (!data.success) {
-            showMessage(data.message);
-            return;
+function loadCart() {
+    $.ajax({
+        url: `${API_BASE}?method=getCart`,
+        method: "GET",
+        dataType: "json",
+        xhrFields: { withCredentials: true },
+        success: function (data) {
+            if (!data.success) {
+                showMessage(data.message);
+                return;
+            }
+            renderCart(data.data.items, data.data.total);
+        },
+        error: function () {
+            showMessage("Warenkorb konnte nicht geladen werden.");
         }
-
-        renderCart(data.data.items, data.data.total);
-    } catch (error) {
-        showMessage("Warenkorb konnte nicht geladen werden.");
-        console.error(error);
-    }
+    });
 }
 
 loadCart();

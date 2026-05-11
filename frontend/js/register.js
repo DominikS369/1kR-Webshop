@@ -7,7 +7,7 @@ function showMessage(message, type = "danger") {
     messageBox.classList.remove("d-none");
 }
 
-form.addEventListener("submit", async function (event) {
+form.addEventListener("submit", function (event) {
     event.preventDefault();
 
     messageBox.classList.add("d-none");
@@ -68,28 +68,25 @@ form.addEventListener("submit", async function (event) {
         payment_info: document.getElementById("payment_info").value.trim()
     };
 
-    try {
-        const response = await fetch("http://localhost:8888/1kR-Webshop/backend/config/dataHandler.php?method=register", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify(formData)
-        });
+    $.ajax({
+        url: "http://localhost:8888/1kR-Webshop/backend/config/dataHandler.php?method=register",
+        method: "POST",
+        contentType: "application/json",
+        dataType: "json",
+        data: JSON.stringify(formData),
+        success: function (data) {
+            if (data.success) {
+                showMessage(data.message, "success");
 
-        const data = await response.json();
-
-        if (data.success) {
-            showMessage(data.message, "success");
-
-            setTimeout(() => {
-                window.location.href = "/1kR-Webshop/frontend/sites/index.html";
-            }, 1000);
-        } else {
-            showMessage(data.message, "danger");
+                setTimeout(() => {
+                    window.location.href = "/1kR-Webshop/frontend/sites/index.html";
+                }, 1000);
+            } else {
+                showMessage(data.message, "danger");
+            }
+        },
+        error: function () {
+            showMessage("Verbindungsfehler zum Server.");
         }
-    } catch (error) {
-        showMessage("Verbindungsfehler zum Server.");
-        console.error(error);
-    }
+    });
 });

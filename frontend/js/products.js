@@ -33,8 +33,8 @@ function renderProducts(products) {
         const card = document.createElement("div");
         card.className = "col-sm-6 col-md-4 col-lg-3";
         card.innerHTML = `
-            <div class="card h-100 shadow-sm">
-                <img src="${IMG_BASE}${p.image}" class="card-img-top" alt="${p.name}">
+            <div class="card h-100 shadow-sm" draggable="true" data-product-id="${p.id}" style="cursor: grab;">
+                <img src="${IMG_BASE}${p.image}" class="card-img-top" alt="${p.name}" draggable="false">
                 <div class="card-body d-flex flex-column">
                     <h5 class="card-title h6">${p.name}</h5>
                     <p class="card-text small text-muted flex-grow-1">${p.description ?? ""}</p>
@@ -49,6 +49,16 @@ function renderProducts(products) {
             </div>
         `;
 
+        const inner = card.querySelector(".card");
+        inner.addEventListener("dragstart", (e) => {
+            e.dataTransfer.setData("text/plain", String(p.id));
+            e.dataTransfer.effectAllowed = "copy";
+            inner.classList.add("opacity-50");
+        });
+        inner.addEventListener("dragend", () => {
+            inner.classList.remove("opacity-50");
+        });
+
         const btn = card.querySelector("button[data-product-id]");
         btn.addEventListener("click", () => addToCart(p.id, btn));
 
@@ -56,61 +66,66 @@ function renderProducts(products) {
     }
 }
 
-async function addToCart(productId, btn) {
+function addToCart(productId, btn) {
     if (btn.disabled) return;
     btn.disabled = true;
 
-    try {
-        const response = await fetch(`${API_BASE}?method=addToCart`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            credentials: "include",
-            body: JSON.stringify({ product_id: productId })
-        });
+    $.ajax({
+        url: `${API_BASE}?method=addToCart`,
+        method: "POST",
+        contentType: "application/json",
+        dataType: "json",
+        xhrFields: { withCredentials: true },
+        data: JSON.stringify({ product_id: productId }),
+        success: function (data) {
+            if (!data.success) {
+                showMessage(data.message);
+                btn.disabled = false;
+                return;
+            }
 
-        const data = await response.json();
+            if (typeof updateCartCount === "function") {
+                updateCartCount();
+            }
 
-        if (!data.success) {
-            showMessage(data.message);
+            const original = btn.textContent;
+            btn.classList.replace("btn-primary", "btn-success");
+            btn.textContent = "✓ Hinzugefügt";
+
+            setTimeout(() => {
+                btn.classList.replace("btn-success", "btn-primary");
+                btn.textContent = original;
+                btn.disabled = false;
+            }, 1200);
+        },
+        error: function () {
+            showMessage("Hinzufügen fehlgeschlagen.");
             btn.disabled = false;
-            return;
         }
-
-        const original = btn.textContent;
-        btn.classList.replace("btn-primary", "btn-success");
-        btn.textContent = "✓ Hinzugefügt";
-
-        setTimeout(() => {
-            btn.classList.replace("btn-success", "btn-primary");
-            btn.textContent = original;
-            btn.disabled = false;
-        }, 1200);
-    } catch (error) {
-        showMessage("Hinzufügen fehlgeschlagen.");
-        btn.disabled = false;
-        console.error(error);
-    }
+    });
 }
 
-async function loadProducts(categoryId) {
-    try {
-        const url = categoryId
-            ? `${API_BASE}?method=getProducts&category=${categoryId}`
-            : `${API_BASE}?method=getProducts`;
+function loadProducts(categoryId) {
+    const url = categoryId
+        ? `${API_BASE}?method=getProducts&category=${categoryId}`
+        : `${API_BASE}?method=getProducts`;
 
-        const response = await fetch(url, { credentials: "include" });
-        const data = await response.json();
-
-        if (!data.success) {
-            showMessage(data.message);
-            return;
+    $.ajax({
+        url: url,
+        method: "GET",
+        dataType: "json",
+        xhrFields: { withCredentials: true },
+        success: function (data) {
+            if (!data.success) {
+                showMessage(data.message);
+                return;
+            }
+            renderProducts(data.data);
+        },
+        error: function () {
+            showMessage("Produkte konnten nicht geladen werden.");
         }
-
-        renderProducts(data.data);
-    } catch (error) {
-        showMessage("Produkte konnten nicht geladen werden.");
-        console.error(error);
-    }
+    });
 }
 
 function updateActiveButton() {
@@ -142,28 +157,31 @@ function renderCategoryButtons(categories) {
     updateActiveButton();
 }
 
-async function loadCategories() {
-    try {
-        const response = await fetch(`${API_BASE}?method=getCategories`, { credentials: "include" });
-        const data = await response.json();
+function loadCategories() {
+    $.ajax({
+        url: `${API_BASE}?method=getCategories`,
+        method: "GET",
+        dataType: "json",
+        xhrFields: { withCredentials: true },
+        success: function (data) {
+            if (!data.success) {
+                showMessage(data.message);
+                return;
+            }
 
-        if (!data.success) {
-            showMessage(data.message);
-            return;
+            if (data.data.length === 0) {
+                showMessage("Keine Kategorien gefunden.", "warning");
+                return;
+            }
+
+            activeCategory = data.data[0].id;
+            renderCategoryButtons(data.data);
+            loadProducts(activeCategory);
+        },
+        error: function () {
+            showMessage("Kategorien konnten nicht geladen werden.");
         }
-
-        if (data.data.length === 0) {
-            showMessage("Keine Kategorien gefunden.", "warning");
-            return;
-        }
-
-        activeCategory = data.data[0].id;
-        renderCategoryButtons(data.data);
-        loadProducts(activeCategory);
-    } catch (error) {
-        showMessage("Kategorien konnten nicht geladen werden.");
-        console.error(error);
-    }
+    });
 }
 
 loadCategories();
