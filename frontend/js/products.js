@@ -154,22 +154,21 @@ function initSearch() {
             return;
         }
         searchTimeout = setTimeout(async () => {
-            try {
-                const response = await fetch(`${API_BASE}?method=searchProducts&q=${encodeURIComponent(q)}`, {
-                credentials: "include"
-            });
-                const data = await response.json();
-
-                if (!data.success) {
-                    showMessage(data.message);
-                    return;
+            $.ajax({
+                url:`${API_BASE}?method=searchProducts&q=${encodeURIComponent(q)}`,
+                method: "GET",
+                xhrFields: { withCredentials: true },
+                success: function(data) {
+                    if (!data.success) {
+                        showMessage(data.message);
+                        return;
+                    }
+                    renderProducts(data.data);
+                },
+                error: function() {
+                    showMessage("Suche fehlgeschlagen.");
                 }
-
-                renderProducts(data.data);
-            } catch (error) {
-                showMessage("Suche fehlgeschlagen.");
-                console.error(error);
-            }
+            });
         }, 300);
     });
 }
