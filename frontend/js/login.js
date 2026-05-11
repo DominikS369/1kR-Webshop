@@ -3,7 +3,7 @@ const messageBox = document.getElementById("messageBox");
 const sessionStatus = document.getElementById("sessionStatus");
 const logoutBtn = document.getElementById("logoutBtn");
 
-const API_BASE = "http://localhost:8888/1kR-Webshop/backend/config/dataHandler.php";
+const API_BASE = "http://localhost:8888/1kR-Webshop/backend/config/datahandler.php";
 
 function showMessage(message, type = "danger") {
     messageBox.className = `alert alert-${type} mt-3`;

@@ -1,5 +1,14 @@
 <?php
 
+header("Access-Control-Allow-Origin: *");
+header("Access-Control-Allow-Methods: GET, POST, OPTIONS");
+header("Access-Control-Allow-Headers: Content-Type");
+
+if ($_SERVER["REQUEST_METHOD"] === "OPTIONS") {
+    http_response_code(204);
+    exit;
+}
+
 header("Content-Type: application/json");
 
 require_once "dbaccess.php";
@@ -272,6 +281,32 @@ switch ($method) {
 
         sendJson(true, "OK", ["data" => $products]);
 
+    case "searchProducts":
+        $query = trim($_GET["q"] ?? "");
+        if ($query === "") {
+            sendJson(true, "Kein Suchbegriff angegeben", ["data" => []]);
+        }
+        $search = '%' . $query . '%';
+        $db = new DBAccess();
+        $conn = $db->getConnection();
+        $stmt = $conn->prepare("
+        SELECT p.id, p.name, p.description, p.price, p.rating, p.image, p.category_id, c.name AS category_name
+        FROM products p
+        JOIN categories c ON c.id = p.category_id
+        WHERE p.is_active = 1 
+          AND (p.name LIKE ? OR p.description LIKE ?)");
+        $stmt->bind_param("ss", $search, $search);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $products = [];
+        while ($row = $result->fetch_assoc()) {
+            $row["price"] = (float)$row["price"];
+            $row["rating"] = (float)$row["rating"];
+            $products[] = $row;
+        }
+        sendJson(true, "OK", ["data" => $products]);
+
+
     case "addToCart":
         requireMethod("POST");
         $input = getJsonInput();
@@ -386,6 +421,54 @@ switch ($method) {
         }
 
         sendJson(true, "OK", ["data" => ["items" => $items, "total" => round($total, 2)]]);
+
+    case "updateCart":
+        requireMethod("POST");
+        $input = getJsonInput();
+        $cartId = (int)($input["cart_id"] ?? 0);
+        $quantity = (int)($input["quantity"] ?? 0);
+
+        if ($cartId <= 0 || $quantity <= 0) {
+            sendJson(false, "Ungültige Daten");
+        }
+
+        startSessionIfNeeded();
+        $userId = $_SESSION["user_id"] ?? null;
+        $sessionId = session_id();
+        $db = new DBAccess();
+        $conn = $db->getConnection();
+
+        if ($userId) {
+            $stmt = $conn->prepare("UPDATE cart SET quantity = ? WHERE id = ? AND user_id = ?");
+            $stmt->bind_param("iii", $quantity, $cartId, $userId);
+        } else {
+            $stmt = $conn->prepare("UPDATE cart SET quantity = ? WHERE id = ? AND session_id = ? AND user_id IS NULL");
+            $stmt->bind_param("iis", $quantity, $cartId, $sessionId);
+        }
+        $stmt->execute();
+        sendJson(true, "Menge aktualisiert");
+
+    case 'removeFromCart':
+        requireMethod("POST");
+        $input = getJsonInput();
+        $cartId = (int)($input["cart_id"] ?? 0);
+        if($cartId <= 0){
+            sendJson(false, "Ungültige Daten");
+        }
+        startSessionIfNeeded();
+        $userId = $_SESSION["user_id"] ?? null;
+        $sessionId = session_id();
+        $db = new DBAccess();
+        $conn = $db->getConnection();
+        if($userId){
+            $stmt = $conn->prepare("DELETE FROM cart WHERE id = ? AND user_id = ?");
+            $stmt->bind_param("ii", $cartId, $userId);
+        } else {
+            $stmt = $conn->prepare("DELETE FROM cart WHERE id = ? AND session_id = ? AND user_id IS NULL");
+            $stmt->bind_param("is", $cartId, $sessionId);
+        }
+        $stmt->execute();
+        sendJson(true, "Produkt aus Warenkorb entfernt");
 
     default:
         sendJson(false, "Unknown method");

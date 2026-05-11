@@ -1,4 +1,4 @@
-const IMG_BASE = "http://localhost:8888/1kR-Webshop/backend/product_pictures/";
+const IMG_BASE = "/1kR-Webshop/backend/product_pictures/";
 
 const cartContent = document.getElementById("cartContent");
 const messageBox = document.getElementById("messageBox");
@@ -22,8 +22,17 @@ function renderCart(items, total) {
                 <td><img src="${IMG_BASE}${it.image}" alt="${it.name}" style="width:60px;height:auto;"></td>
                 <td>${it.name}</td>
                 <td>${it.price.toFixed(2)} €</td>
-                <td>${it.quantity}</td>
+                <td>
+                    <div class="d-flex align-items-center gap-2">
+                        <button class="btn btn-outline-secondary btn-sm" onclick="changeQuantity(${it.id}, ${it.quantity - 1})">−</button>
+                        <span>${it.quantity}</span>
+                        <button class="btn btn-outline-secondary btn-sm" onclick="changeQuantity(${it.id}, ${it.quantity + 1})">+</button>
+                    </div>
+                </td>
                 <td class="fw-bold">${it.subtotal.toFixed(2)} €</td>
+                <td>
+                    <button class="btn btn-danger btn-sm" onclick="removeItem(${it.id})">Entfernen</button>
+                </td>
             </tr>
         `;
     }
@@ -37,6 +46,7 @@ function renderCart(items, total) {
                     <th>Preis</th>
                     <th>Anzahl</th>
                     <th>Zwischensumme</th>
+                    <th></th>
                 </tr>
             </thead>
             <tbody>${rows}</tbody>
@@ -44,10 +54,60 @@ function renderCart(items, total) {
                 <tr>
                     <td colspan="4" class="text-end fw-bold">Gesamt:</td>
                     <td class="fw-bold">${total.toFixed(2)} €</td>
+                    <td></td>
                 </tr>
             </tfoot>
         </table>
     `;
+}
+
+function changeQuantity(cartId, newQuantity) {
+    if (newQuantity <= 0) {
+        removeItem(cartId);
+        return;
+    }
+
+    $.ajax({
+        url: `${API_BASE}?method=updateCart`,
+        method: "POST",
+        contentType: "application/json",
+        dataType: "json",
+        xhrFields: { withCredentials: true },
+        data: JSON.stringify({ cart_id: cartId, quantity: newQuantity }),
+        success: function (data) {
+            if (!data.success) {
+                showMessage(data.message);
+                return;
+            }
+            loadCart();
+            if (typeof updateCartCount === "function") updateCartCount();
+        },
+        error: function () {
+            showMessage("Fehler beim Aktualisieren des Warenkorbs.");
+        }
+    });
+}
+
+function removeItem(cartId) {
+    $.ajax({
+        url: `${API_BASE}?method=removeFromCart`,
+        method: "POST",
+        contentType: "application/json",
+        dataType: "json",
+        xhrFields: { withCredentials: true },
+        data: JSON.stringify({ cart_id: cartId }),
+        success: function (data) {
+            if (!data.success) {
+                showMessage(data.message);
+                return;
+            }
+            loadCart();
+            if (typeof updateCartCount === "function") updateCartCount();
+        },
+        error: function () {
+            showMessage("Fehler beim Entfernen.");
+        }
+    });
 }
 
 function loadCart() {

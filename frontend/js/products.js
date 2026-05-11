@@ -1,10 +1,11 @@
-const IMG_BASE = "http://localhost:8888/1kR-Webshop/backend/product_pictures/";
+const IMG_BASE = "/1kR-Webshop/backend/product_pictures/";
 
 const grid = document.getElementById("productGrid");
 const messageBox = document.getElementById("messageBox");
 const filterBox = document.getElementById("categoryFilter");
 
 let activeCategory = null;
+let searchTimeout = null;
 
 function showMessage(message, type = "danger") {
     messageBox.className = `alert alert-${type}`;
@@ -25,7 +26,7 @@ function renderProducts(products) {
     grid.innerHTML = "";
 
     if (products.length === 0) {
-        grid.innerHTML = `<div class="col-12"><p class="text-muted">Keine Produkte in dieser Kategorie.</p></div>`;
+        grid.innerHTML = `<div class="col-12"><p class="text-muted">Keine Produkte gefunden.</p></div>`;
         return;
     }
 
@@ -157,6 +158,41 @@ function renderCategoryButtons(categories) {
     updateActiveButton();
 }
 
+function initSearch() {
+    const searchInput = document.getElementById("searchInput");
+    if (!searchInput) return;
+
+    searchInput.addEventListener("input", () => {
+        clearTimeout(searchTimeout);
+
+        const q = searchInput.value.trim();
+
+        if (q === "") {
+            loadProducts(activeCategory);
+            return;
+        }
+
+        searchTimeout = setTimeout(() => {
+            $.ajax({
+                url: `${API_BASE}?method=searchProducts&q=${encodeURIComponent(q)}`,
+                method: "GET",
+                dataType: "json",
+                xhrFields: { withCredentials: true },
+                success: function (data) {
+                    if (!data.success) {
+                        showMessage(data.message);
+                        return;
+                    }
+                    renderProducts(data.data);
+                },
+                error: function () {
+                    showMessage("Suche fehlgeschlagen.");
+                }
+            });
+        }, 300);
+    });
+}
+
 function loadCategories() {
     $.ajax({
         url: `${API_BASE}?method=getCategories`,
@@ -185,3 +221,4 @@ function loadCategories() {
 }
 
 loadCategories();
+initSearch();
