@@ -1,9 +1,9 @@
-const IMG_BASE = "http://localhost:8888/1kR-Webshop/backend/product_pictures/";
+const IMG_BASE = "/1kR-Webshop/backend/product_pictures/";
 
 const grid = document.getElementById("productGrid");
 const messageBox = document.getElementById("messageBox");
 const filterBox = document.getElementById("categoryFilter");
-
+let searchTimeout = null;
 let activeCategory = null;
 
 function showMessage(message, type = "danger") {
@@ -141,7 +141,37 @@ function renderCategoryButtons(categories) {
 
     updateActiveButton();
 }
+function initSearch() {
+    const searchInput = document.getElementById("searchInput");
 
+    searchInput.addEventListener("input", () => {
+        clearTimeout(searchTimeout);
+
+        const q = searchInput.value.trim();
+
+        if (q === "") {
+            loadProducts(activeCategory);
+            return;
+        }
+        searchTimeout = setTimeout(async () => {
+            $.ajax({
+                url:`${API_BASE}?method=searchProducts&q=${encodeURIComponent(q)}`,
+                method: "GET",
+                xhrFields: { withCredentials: true },
+                success: function(data) {
+                    if (!data.success) {
+                        showMessage(data.message);
+                        return;
+                    }
+                    renderProducts(data.data);
+                },
+                error: function() {
+                    showMessage("Suche fehlgeschlagen.");
+                }
+            });
+        }, 300);
+    });
+}
 async function loadCategories() {
     try {
         const response = await fetch(`${API_BASE}?method=getCategories`, { credentials: "include" });
@@ -166,4 +196,6 @@ async function loadCategories() {
     }
 }
 
+
 loadCategories();
+initSearch();
