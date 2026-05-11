@@ -46,6 +46,7 @@ function renderCart(items, total) {
                     <th>Preis</th>
                     <th>Anzahl</th>
                     <th>Zwischensumme</th>
+                    <th></th>
                 </tr>
             </thead>
             <tbody>${rows}</tbody>
@@ -53,64 +54,79 @@ function renderCart(items, total) {
                 <tr>
                     <td colspan="4" class="text-end fw-bold">Gesamt:</td>
                     <td class="fw-bold">${total.toFixed(2)} €</td>
+                    <td></td>
                 </tr>
             </tfoot>
         </table>
     `;
 }
-async function changeQuantity(cartId, newQuantity) {
+
+function changeQuantity(cartId, newQuantity) {
     if (newQuantity <= 0) {
-        await removeItem(cartId);
+        removeItem(cartId);
         return;
     }
 
-    try {
-        const response = await fetch(`${API_BASE}?method=updateCart`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            credentials: "include",
-            body: JSON.stringify({ cart_id: cartId, quantity: newQuantity })
-        });
-        const data = await response.json();
-        if (data.success) loadCart();
-        else showMessage(data.message);
-    } catch (error) {
-        showMessage("Fehler beim Aktualisieren des Warenkorbs.");
-        console.error(error);
-    }
-}
-
-async function removeItem(cartId) {
-    try {
-        const response = await fetch(`${API_BASE}?method=removeFromCart`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            credentials: "include",
-            body: JSON.stringify({ cart_id: cartId })
-        });
-        const data = await response.json();
-        if (data.success) loadCart();
-        else showMessage(data.message);
-    } catch (error) {
-        showMessage("Fehler beim Entfernen.");
-        console.error(error);
-    }
-}
-async function loadCart() {
-    try {
-        const response = await fetch(`${API_BASE}?method=getCart`, { credentials: "include" });
-        const data = await response.json();
-
-        if (!data.success) {
-            showMessage(data.message);
-            return;
+    $.ajax({
+        url: `${API_BASE}?method=updateCart`,
+        method: "POST",
+        contentType: "application/json",
+        dataType: "json",
+        xhrFields: { withCredentials: true },
+        data: JSON.stringify({ cart_id: cartId, quantity: newQuantity }),
+        success: function (data) {
+            if (!data.success) {
+                showMessage(data.message);
+                return;
+            }
+            loadCart();
+            if (typeof updateCartCount === "function") updateCartCount();
+        },
+        error: function () {
+            showMessage("Fehler beim Aktualisieren des Warenkorbs.");
         }
+    });
+}
 
-        renderCart(data.data.items, data.data.total);
-    } catch (error) {
-        showMessage("Warenkorb konnte nicht geladen werden.");
-        console.error(error);
-    }
+function removeItem(cartId) {
+    $.ajax({
+        url: `${API_BASE}?method=removeFromCart`,
+        method: "POST",
+        contentType: "application/json",
+        dataType: "json",
+        xhrFields: { withCredentials: true },
+        data: JSON.stringify({ cart_id: cartId }),
+        success: function (data) {
+            if (!data.success) {
+                showMessage(data.message);
+                return;
+            }
+            loadCart();
+            if (typeof updateCartCount === "function") updateCartCount();
+        },
+        error: function () {
+            showMessage("Fehler beim Entfernen.");
+        }
+    });
+}
+
+function loadCart() {
+    $.ajax({
+        url: `${API_BASE}?method=getCart`,
+        method: "GET",
+        dataType: "json",
+        xhrFields: { withCredentials: true },
+        success: function (data) {
+            if (!data.success) {
+                showMessage(data.message);
+                return;
+            }
+            renderCart(data.data.items, data.data.total);
+        },
+        error: function () {
+            showMessage("Warenkorb konnte nicht geladen werden.");
+        }
+    });
 }
 
 loadCart();

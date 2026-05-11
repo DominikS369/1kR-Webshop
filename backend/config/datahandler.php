@@ -356,6 +356,28 @@ switch ($method) {
 
         sendJson(true, "Produkt hinzugefügt", ["data" => ["quantity" => 1]]);
 
+    case "getCartCount":
+        startSessionIfNeeded();
+
+        $userId = $_SESSION["user_id"] ?? null;
+        $sessionId = session_id();
+
+        $db = new DBAccess();
+        $conn = $db->getConnection();
+
+        if ($userId) {
+            $stmt = $conn->prepare("SELECT COALESCE(SUM(quantity), 0) AS count FROM cart WHERE user_id = ?");
+            $stmt->bind_param("i", $userId);
+        } else {
+            $stmt = $conn->prepare("SELECT COALESCE(SUM(quantity), 0) AS count FROM cart WHERE session_id = ? AND user_id IS NULL");
+            $stmt->bind_param("s", $sessionId);
+        }
+
+        $stmt->execute();
+        $row = $stmt->get_result()->fetch_assoc();
+
+        sendJson(true, "OK", ["data" => ["count" => (int)$row["count"]]]);
+
     case "getCart":
         startSessionIfNeeded();
 

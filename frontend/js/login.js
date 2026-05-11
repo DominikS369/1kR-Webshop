@@ -16,29 +16,28 @@ function clearMessage() {
     messageBox.textContent = "";
 }
 
-async function checkSession() {
-    try {
-        const response = await fetch(`${API_BASE}?method=checkSession`, {
-            method: "GET",
-            credentials: "include"
-        });
-
-        const data = await response.json();
-
-        if (data.success) {
-            sessionStatus.textContent = `Eingeloggt als: ${data.user.username}`;
-            logoutBtn.classList.remove("d-none");
-        } else {
-            sessionStatus.textContent = "Nicht eingeloggt";
-            logoutBtn.classList.add("d-none");
+function checkSession() {
+    $.ajax({
+        url: `${API_BASE}?method=checkSession`,
+        method: "GET",
+        dataType: "json",
+        xhrFields: { withCredentials: true },
+        success: function (data) {
+            if (data.success) {
+                sessionStatus.textContent = `Eingeloggt als: ${data.user.username}`;
+                logoutBtn.classList.remove("d-none");
+            } else {
+                sessionStatus.textContent = "Nicht eingeloggt";
+                logoutBtn.classList.add("d-none");
+            }
+        },
+        error: function () {
+            sessionStatus.textContent = "Session-Status konnte nicht geladen werden";
         }
-    } catch (error) {
-        sessionStatus.textContent = "Session-Status konnte nicht geladen werden";
-        console.error(error);
-    }
+    });
 }
 
-form.addEventListener("submit", async function (event) {
+form.addEventListener("submit", function (event) {
     event.preventDefault();
     clearMessage();
 
@@ -51,57 +50,53 @@ form.addEventListener("submit", async function (event) {
     const password = document.getElementById("password").value;
     const remember = document.getElementById("remember").checked;
 
-    try {
-        const response = await fetch(`${API_BASE}?method=login`, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            credentials: "include",
-            body: JSON.stringify({
-                username: username,
-                password: password,
-                remember: remember
-            })
-        });
+    $.ajax({
+        url: `${API_BASE}?method=login`,
+        method: "POST",
+        contentType: "application/json",
+        dataType: "json",
+        xhrFields: { withCredentials: true },
+        data: JSON.stringify({
+            username: username,
+            password: password,
+            remember: remember
+        }),
+        success: function (data) {
+            if (data.success) {
+                showMessage(data.message, "success");
 
-        const data = await response.json();
-
-        if (data.success) {
-            showMessage(data.message, "success");
-
-            setTimeout(() => {
-                window.location.href = "/1kR-Webshop/frontend/sites/index.html";
-            }, 1000);
-        } else {
-            showMessage(data.message, "danger");
+                setTimeout(() => {
+                    window.location.href = "/1kR-Webshop/frontend/sites/index.html";
+                }, 1000);
+            } else {
+                showMessage(data.message, "danger");
+            }
+        },
+        error: function () {
+            showMessage("Verbindungsfehler zum Server.");
         }
-    } catch (error) {
-        showMessage("Verbindungsfehler zum Server.");
-        console.error(error);
-    }
+    });
 });
 
-logoutBtn.addEventListener("click", async function () {
+logoutBtn.addEventListener("click", function () {
     clearMessage();
 
-    try {
-        const response = await fetch(`${API_BASE}?method=logout`, {
-            method: "GET",
-            credentials: "include"
-        });
-
-        const data = await response.json();
-
-        if (data.success) {
-            window.location.href = "/1kR-Webshop/frontend/sites/index.html";
-        } else {
-            showMessage("Logout fehlgeschlagen.");
+    $.ajax({
+        url: `${API_BASE}?method=logout`,
+        method: "GET",
+        dataType: "json",
+        xhrFields: { withCredentials: true },
+        success: function (data) {
+            if (data.success) {
+                window.location.href = "/1kR-Webshop/frontend/sites/index.html";
+            } else {
+                showMessage("Logout fehlgeschlagen.");
+            }
+        },
+        error: function () {
+            showMessage("Verbindungsfehler beim Logout.");
         }
-    } catch (error) {
-        showMessage("Verbindungsfehler beim Logout.");
-        console.error(error);
-    }
+    });
 });
 
 checkSession();
