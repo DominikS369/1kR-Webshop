@@ -284,30 +284,28 @@ switch ($method) {
     case "searchProducts":
         $query = trim($_GET["q"] ?? "");
         if ($query === "") {
-            sendJson(false, "Kein Suchbegriff angegeben");
+            sendJson(true, "Kein Suchbegriff angegeben", ["data" => []]);
         }
+        $search = '%' . $query . '%';
         $db = new DBAccess();
         $conn = $db->getConnection();
-        $like = "%" . $conn->real_escape_string($query) . "%";
         $stmt = $conn->prepare("
-            SELECT p.id, p.name, p.description, p.price, p.rating, p.image,
-                   p.category_id, c.name AS category_name
-            FROM products p
-            JOIN categories c ON c.id = p.category_id
-            WHERE p.is_active = 1
-              AND (p.name LIKE ? OR p.description LIKE ?)
-            ORDER BY p.name
-        ");
-        $stmt->bind_param("ss", $like, $like);
+        SELECT p.id, p.name, p.description, p.price, p.rating, p.image, p.category_id, c.name AS category_name
+        FROM products p
+        JOIN categories c ON c.id = p.category_id
+        WHERE p.is_active = 1 
+          AND (p.name LIKE ? OR p.description LIKE ?)");
+        $stmt->bind_param("ss", $search, $search);
         $stmt->execute();
         $result = $stmt->get_result();
         $products = [];
         while ($row = $result->fetch_assoc()) {
-            $row["price"]  = (float)$row["price"];
+            $row["price"] = (float)$row["price"];
             $row["rating"] = (float)$row["rating"];
             $products[] = $row;
         }
         sendJson(true, "OK", ["data" => $products]);
+
 
     case "addToCart":
         requireMethod("POST");

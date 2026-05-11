@@ -3,8 +3,7 @@ const IMG_BASE = "/1kR-Webshop/backend/product_pictures/";
 const grid = document.getElementById("productGrid");
 const messageBox = document.getElementById("messageBox");
 const filterBox = document.getElementById("categoryFilter");
-const search = document.getElementById("searchField");
-
+let searchTimeout = null;
 let activeCategory = null;
 
 function showMessage(message, type = "danger") {
@@ -113,45 +112,6 @@ async function loadProducts(categoryId) {
         console.error(error);
     }
 }
-async function searchProducts(query){
-    try {
-        const response = await fetch(
-            `${API_BASE}?method=searchProducts&q=${encodeURIComponent(query)}`,
-            {
-                credentials: "include"
-            }
-        );
-        const data = await response.json();
-        if (!data.success) {
-            showMessage(data.message);
-            return;
-        }
-        renderProducts(data.data);
-    } catch (error) {
-        showMessage("Produktsuche fehlgeschlagen.");
-        console.error(error);
-    }
-}
-function initSearchInput() {
-    const searchInput = document.getElementById("searchInput");
-    if (!searchInput) return;
-
-    searchInput.addEventListener("input", () => {
-        const query = searchInput.value.trim();
-        clearTimeout(searchTimeout);
-        if (query.length === 0) {
-            loadProducts(activeCategory);
-            return;
-        }
-        searchTimeout = setTimeout(() => {
-            activeCategory = null;
-            updateActiveButton();
-            searchProducts(query);
-        }, 300);
-    });
-}
-
-
 
 function updateActiveButton() {
     const buttons = filterBox.querySelectorAll("button");
@@ -181,7 +141,38 @@ function renderCategoryButtons(categories) {
 
     updateActiveButton();
 }
+function initSearch() {
+    const searchInput = document.getElementById("searchInput");
 
+    searchInput.addEventListener("input", () => {
+        clearTimeout(searchTimeout);
+
+        const q = searchInput.value.trim();
+
+        if (q === "") {
+            loadProducts(activeCategory);
+            return;
+        }
+        searchTimeout = setTimeout(async () => {
+            try {
+                const response = await fetch(`${API_BASE}?method=searchProducts&q=${encodeURIComponent(q)}`, {
+                credentials: "include"
+            });
+                const data = await response.json();
+
+                if (!data.success) {
+                    showMessage(data.message);
+                    return;
+                }
+
+                renderProducts(data.data);
+            } catch (error) {
+                showMessage("Suche fehlgeschlagen.");
+                console.error(error);
+            }
+        }, 300);
+    });
+}
 async function loadCategories() {
     try {
         const response = await fetch(`${API_BASE}?method=getCategories`, { credentials: "include" });
@@ -206,5 +197,6 @@ async function loadCategories() {
     }
 }
 
-initSearchInput();
+
 loadCategories();
+initSearch();
