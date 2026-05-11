@@ -1,4 +1,4 @@
-const IMG_BASE = "/1kR-Webshop/backend/product_pictures/";
+const IMG_BASE = "/1kR-Webshop/frontend/res/img/";
 
 const grid = document.getElementById("productGrid");
 const messageBox = document.getElementById("messageBox");
