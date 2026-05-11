@@ -48,9 +48,9 @@ INSERT INTO categories (name) VALUES
 ('Shirts'), ('Hoodies'), ('Caps'), ('Accessoires');
 
 INSERT INTO products (category_id, name, description, price, rating, image) VALUES
-(1, 'Tausend Rosen Basic Tee', 'Schwarzes Shirt mit Logo-Print vorne.', 24.90, 4.5, 'produkt1.jpg'),
-(1, 'Rosen Tour Shirt 2025', 'Limitiertes Tour-Shirt, weiß mit Backprint.', 29.90, 4.8, 'produkt2.jpg'),
-(1, 'Vintage Logo Tee', 'Washed-Look, Unisex-Schnitt.', 27.50, 4.2, 'produkt3.jpg'),
+(1, 'Tausend Rosen Basic Tee', 'Schwarzes Shirt mit Logo-Print vorne.', 24.90, 4.5, 'placeholder.jpg'),
+(1, 'Rosen Tour Shirt 2025', 'Limitiertes Tour-Shirt, weiß mit Backprint.', 29.90, 4.8, 'placeholder.jpg'),
+(1, 'Vintage Logo Tee', 'Washed-Look, Unisex-Schnitt.', 27.50, 4.2, 'placeholder.jpg'),
 (2, 'Classic Hoodie schwarz', 'Schwerer Baumwoll-Hoodie mit gesticktem Logo.', 59.90, 4.7, 'placeholder.jpg'),
 (2, 'Zip-Hoodie grau', 'Mit Reißverschluss, weicher Innenstoff.', 64.90, 4.4, 'placeholder.jpg'),
 (2, 'Oversize Hoodie', 'Boxy Fit, in Sand.', 69.00, 4.6, 'placeholder.jpg'),
