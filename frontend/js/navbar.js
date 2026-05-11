@@ -1,4 +1,4 @@
-const API_BASE = "http://localhost:8888/1kR-Webshop/backend/config/dataHandler.php";
+const API_BASE = "/1kR-Webshop/backend/config/datahandler.php";
 
 async function renderNavbar() {
     const nav = document.getElementById("mainNavbar");
