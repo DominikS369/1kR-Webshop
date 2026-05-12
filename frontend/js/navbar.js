@@ -22,7 +22,8 @@ function renderNavbar() {
 
 function drawNavbar(nav, user) {
     let links = `
-        <a class="navbar-brand" href="index.html">Tausend Rosen</a>
+        <a class="navbar-brand" href="index.html">
+    <img src="../res/img/placeholder.jpg" alt="Tausend Rosen" height="100"></a>
         <div class="d-flex gap-3 align-items-center">
     `;
 

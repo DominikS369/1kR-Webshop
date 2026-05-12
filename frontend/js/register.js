@@ -1,3 +1,5 @@
+const REGISTER_API = "http://localhost:8888/1kR-Webshop/backend/config/dataHandler.php";
+
 const form = document.getElementById("registerForm");
 const messageBox = document.getElementById("messageBox");
 
@@ -69,7 +71,7 @@ form.addEventListener("submit", function (event) {
     };
 
     $.ajax({
-        url: "http://localhost:8888/1kR-Webshop/backend/config/dataHandler.php?method=register",
+        url: `${REGISTER_API}?method=register`,
         method: "POST",
         contentType: "application/json",
         dataType: "json",
@@ -77,9 +79,8 @@ form.addEventListener("submit", function (event) {
         success: function (data) {
             if (data.success) {
                 showMessage(data.message, "success");
-
                 setTimeout(() => {
-                    window.location.href = "/1kR-Webshop/frontend/sites/index.html";
+                    window.location.href = "index.html";
                 }, 1000);
             } else {
                 showMessage(data.message, "danger");
