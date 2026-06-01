@@ -49,6 +49,11 @@ function startSessionIfNeeded(): void
 
 $method = $_GET["method"] ?? "";
 
+// DEBUG: Log die empfangenen Werte
+error_log("REQUEST METHOD: " . $_SERVER["REQUEST_METHOD"]);
+error_log("GET method param: " . var_export($_GET, true));
+error_log("Parsed method: " . $method);
+
 switch ($method) {
 
     case "test":
@@ -828,5 +833,5 @@ switch ($method) {
         sendJson(true, "OK", ["data" => ["order" => $order, "items" => $items]]);
 
     default:
-        sendJson(false, "Unknown method");
+        sendJson(false, "Unknown method: '" . $method . "'. GET params: " . json_encode($_GET));
 }

@@ -1,4 +1,3 @@
-const REGISTER_API = API_BASE + "?method=register";
 
 const form = document.getElementById("registerForm");
 const messageBox = document.getElementById("messageBox");
@@ -70,11 +69,11 @@ form.addEventListener("submit", function (event) {
         payment_info: document.getElementById("payment_info").value.trim()
     };
 
-    console.log(" Register attempt started");
-    console.log("API URL:", REGISTER_API);
+    console.log("Register attempt started");
+    console.log("API URL:", API_BASE);
 
     $.ajax({
-        url: REGISTER_API,
+        url: API_BASE + "?method=register",
         method: "POST",
         contentType: "application/json",
         dataType: "json",
