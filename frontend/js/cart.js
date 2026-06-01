@@ -146,7 +146,7 @@ function updateOrderButton() {
 
 function checkLogin() {
     $.ajax({
-        url: API_URL + "?method=checkSession",
+        url: `${API_BASE}?method=checkSession`,
         method: "GET",
         dataType: "json",
         xhrFields: { withCredentials: true },

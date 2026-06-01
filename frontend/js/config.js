@@ -1,16 +1,10 @@
-// Dynamische API-URL - funktioniert auf jedem Host und Port
-// Verwendet den aktuellen Origin + relativen Pfad
-const API_URL = (function() {
-    // Option 1: Nutze window.location.origin (sicherste Methode)
-    const protocol = window.location.protocol;  // "http:" oder "https:"
-    const hostname = window.location.hostname;   // "localhost"
-    const port = window.location.port;           // "" oder "8888"
-
-    const portPart = port ? ":" + port : "";
-    const origin = protocol + "//" + hostname + portPart;
-
-    const url = origin + "/1kR-Webshop/backend/config/datahandler.php";
-    console.log("✓ API_URL initialized:", url);
+// API-URL via relativer Pfad - funktioniert überall!
+// Von /frontend/sites/index.html oder /frontend/sites/login.html zu /backend/config/datahandler.php
+// = ../../backend/config/datahandler.php
+const API_BASE = (function() {
+    const relativePath = "../../backend/config/datahandler.php";
+    const url = new URL(relativePath, window.location.href).href;
+    console.log("API_BASE:", url);
     return url;
 })();
 

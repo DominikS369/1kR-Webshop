@@ -1,4 +1,4 @@
-const API_BASE = "/1kR-Webshop/backend/config/datahandler.php";
+// API_BASE wird aus config.js geladen
 
 function renderNavbar() {
     const nav = document.getElementById("mainNavbar");
@@ -138,7 +138,7 @@ function updateCartCount() {
     if (!badge) return;
 
     $.ajax({
-        url: API_URL + "?method=getCartCount",
+        url: API_BASE + "?method=getCartCount",
         method: "GET",
         dataType: "json",
         xhrFields: { withCredentials: true },

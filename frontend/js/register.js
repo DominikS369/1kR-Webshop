@@ -1,4 +1,4 @@
-const REGISTER_API = API_URL + "?method=register";
+const REGISTER_API = API_BASE + "?method=register";
 
 const form = document.getElementById("registerForm");
 const messageBox = document.getElementById("messageBox");
@@ -70,6 +70,9 @@ form.addEventListener("submit", function (event) {
         payment_info: document.getElementById("payment_info").value.trim()
     };
 
+    console.log("🔵 Register attempt started");
+    console.log("API URL:", REGISTER_API);
+
     $.ajax({
         url: REGISTER_API,
         method: "POST",
@@ -77,17 +80,25 @@ form.addEventListener("submit", function (event) {
         dataType: "json",
         data: JSON.stringify(formData),
         success: function (data) {
+            console.log("✅ Server Response:", data);
             if (data.success) {
                 showMessage(data.message, "success");
+                console.log("✅ Registration successful, redirecting...");
                 setTimeout(() => {
                     window.location.href = "index.html";
                 }, 1000);
             } else {
+                console.log("❌ Server returned error:", data.message);
                 showMessage(data.message, "danger");
             }
         },
-        error: function () {
-            showMessage("Verbindungsfehler zum Server.");
+        error: function (jqXHR, textStatus, errorThrown) {
+            console.error("❌ AJAX Error Details:");
+            console.error("Status:", jqXHR.status);
+            console.error("Text Status:", textStatus);
+            console.error("Error Thrown:", errorThrown);
+            console.error("Response Text:", jqXHR.responseText);
+            showMessage("Verbindungsfehler zum Server: " + textStatus);
         }
     });
 });
