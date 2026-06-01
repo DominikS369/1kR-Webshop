@@ -76,6 +76,15 @@ CREATE TABLE IF NOT EXISTS user_payment_methods (
     UNIQUE KEY uniq_user_method (user_id, method)
 );
 
+CREATE TABLE IF NOT EXISTS invoices (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    order_id INT NOT NULL,
+    invoice_number VARCHAR(50) NOT NULL UNIQUE,
+    invoice_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (order_id) REFERENCES orders(id),
+    UNIQUE KEY uniq_order_invoice (order_id)
+);
+
 INSERT INTO categories (name) VALUES
 ('Shirts'), ('Hoodies'), ('Caps'), ('Accessoires');
 

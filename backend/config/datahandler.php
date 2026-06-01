@@ -724,6 +724,79 @@ switch ($method) {
 
         sendJson(true, "OK", ["data" => ["order" => $order, "items" => $items]]);
 
+    case "getInvoice":
+        startSessionIfNeeded();
+
+        $userId = $_SESSION["user_id"] ?? null;
+        if (!$userId) {
+            sendJson(false, "Nicht eingeloggt");
+        }
+
+        $orderId = isset($_GET["order"]) ? (int)$_GET["order"] : 0;
+        if ($orderId <= 0) {
+            sendJson(false, "Ungültige Bestell-ID");
+        }
+
+        $db = new DBAccess();
+        $conn = $db->getConnection();
+
+        $orderStmt = $conn->prepare("
+            SELECT id, order_date, total, firstname, lastname, address, zip, city, payment_method
+            FROM orders
+            WHERE id = ? AND user_id = ?
+        ");
+        $orderStmt->bind_param("ii", $orderId, $userId);
+        $orderStmt->execute();
+        $order = $orderStmt->get_result()->fetch_assoc();
+
+        if (!$order) {
+            sendJson(false, "Bestellung nicht gefunden");
+        }
+
+        $invStmt = $conn->prepare("SELECT invoice_number, invoice_date FROM invoices WHERE order_id = ?");
+        $invStmt->bind_param("i", $orderId);
+        $invStmt->execute();
+        $invoice = $invStmt->get_result()->fetch_assoc();
+
+        if (!$invoice) {
+            $next = $conn->query("SELECT IFNULL(MAX(id), 0) + 1 AS next_id FROM invoices");
+            $nextId = (int)$next->fetch_assoc()["next_id"];
+            $invoiceNumber = sprintf("R-%d-%04d", (int)date('Y'), $nextId);
+
+            $newStmt = $conn->prepare("INSERT INTO invoices (order_id, invoice_number) VALUES (?, ?)");
+            $newStmt->bind_param("is", $orderId, $invoiceNumber);
+            $newStmt->execute();
+
+            $invStmt->execute();
+            $invoice = $invStmt->get_result()->fetch_assoc();
+        }
+
+        $itemStmt = $conn->prepare("
+            SELECT oi.product_id, oi.quantity, oi.price, p.name, p.image
+            FROM order_items oi
+            JOIN products p ON p.id = oi.product_id
+            WHERE oi.order_id = ?
+        ");
+        $itemStmt->bind_param("i", $orderId);
+        $itemStmt->execute();
+        $itemResult = $itemStmt->get_result();
+
+        $items = [];
+        while ($row = $itemResult->fetch_assoc()) {
+            $row["quantity"] = (int)$row["quantity"];
+            $row["price"] = (float)$row["price"];
+            $row["subtotal"] = round($row["price"] * $row["quantity"], 2);
+            $items[] = $row;
+        }
+
+        $order["total"] = (float)$order["total"];
+
+        sendJson(true, "OK", ["data" => [
+            "invoice" => $invoice,
+            "order" => $order,
+            "items" => $items
+        ]]);
+
     default:
         sendJson(false, "Unknown method");
 }
