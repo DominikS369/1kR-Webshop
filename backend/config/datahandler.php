@@ -121,6 +121,15 @@ switch ($method) {
         );
 
         if ($stmt->execute()) {
+            $newUserId = $conn->insert_id;
+
+            $defaultMethods = ["Auf Rechnung", "Kreditkarte", "PayPal"];
+            $methodStmt = $conn->prepare("INSERT INTO user_payment_methods (user_id, method) VALUES (?, ?)");
+            foreach ($defaultMethods as $method) {
+                $methodStmt->bind_param("is", $newUserId, $method);
+                $methodStmt->execute();
+            }
+
             sendJson(true, "Registrierung erfolgreich");
         }
 
@@ -174,6 +183,37 @@ switch ($method) {
         if ($remember) {
             setcookie("remember_user", (string)$user["id"], time() + (60 * 60 * 24 * 30), "/");
         }
+
+        // Gast-Warenkorb auf den eingeloggten User übertragen
+        $userId = $user["id"];
+        $sessionId = session_id();
+
+        $guestStmt = $conn->prepare("SELECT product_id, quantity FROM cart WHERE session_id = ? AND user_id IS NULL");
+        $guestStmt->bind_param("s", $sessionId);
+        $guestStmt->execute();
+        $guestItems = $guestStmt->get_result();
+
+        while ($item = $guestItems->fetch_assoc()) {
+            $check = $conn->prepare("SELECT id, quantity FROM cart WHERE user_id = ? AND product_id = ?");
+            $check->bind_param("ii", $userId, $item["product_id"]);
+            $check->execute();
+            $existing = $check->get_result()->fetch_assoc();
+
+            if ($existing) {
+                $newQty = $existing["quantity"] + $item["quantity"];
+                $upd = $conn->prepare("UPDATE cart SET quantity = ? WHERE id = ?");
+                $upd->bind_param("ii", $newQty, $existing["id"]);
+                $upd->execute();
+            } else {
+                $move = $conn->prepare("UPDATE cart SET user_id = ?, session_id = NULL WHERE session_id = ? AND product_id = ?");
+                $move->bind_param("isi", $userId, $sessionId, $item["product_id"]);
+                $move->execute();
+            }
+        }
+
+        $cleanup = $conn->prepare("DELETE FROM cart WHERE session_id = ? AND user_id IS NULL");
+        $cleanup->bind_param("s", $sessionId);
+        $cleanup->execute();
 
         sendJson(true, "Login erfolgreich");
 
@@ -469,6 +509,220 @@ switch ($method) {
         }
         $stmt->execute();
         sendJson(true, "Produkt aus Warenkorb entfernt");
+
+    case "getUserData":
+        startSessionIfNeeded();
+
+        $userId = $_SESSION["user_id"] ?? null;
+        if (!$userId) {
+            sendJson(false, "Nicht eingeloggt");
+        }
+
+        $db = new DBAccess();
+        $conn = $db->getConnection();
+
+        $stmt = $conn->prepare("
+            SELECT firstname, lastname, address, zip, city
+            FROM users
+            WHERE id = ?
+        ");
+        $stmt->bind_param("i", $userId);
+        $stmt->execute();
+        $userData = $stmt->get_result()->fetch_assoc();
+
+        if (!$userData) {
+            sendJson(false, "Benutzer nicht gefunden");
+        }
+
+        sendJson(true, "OK", ["data" => $userData]);
+
+    case "getUserPaymentMethods":
+        startSessionIfNeeded();
+
+        $userId = $_SESSION["user_id"] ?? null;
+        if (!$userId) {
+            sendJson(false, "Nicht eingeloggt");
+        }
+
+        $db = new DBAccess();
+        $conn = $db->getConnection();
+
+        $stmt = $conn->prepare("SELECT method FROM user_payment_methods WHERE user_id = ? ORDER BY id");
+        $stmt->bind_param("i", $userId);
+        $stmt->execute();
+        $result = $stmt->get_result();
+
+        $methods = [];
+        while ($row = $result->fetch_assoc()) {
+            $methods[] = $row["method"];
+        }
+
+        sendJson(true, "OK", ["data" => $methods]);
+
+    case "placeOrder":
+        requireMethod("POST");
+        startSessionIfNeeded();
+
+        $userId = $_SESSION["user_id"] ?? null;
+        if (!$userId) {
+            sendJson(false, "Nicht eingeloggt");
+        }
+
+        $input = getJsonInput();
+
+        $firstname = trim($input["firstname"] ?? "");
+        $lastname = trim($input["lastname"] ?? "");
+        $address = trim($input["address"] ?? "");
+        $zip = trim($input["zip"] ?? "");
+        $city = trim($input["city"] ?? "");
+        $paymentMethod = trim($input["payment_method"] ?? "");
+
+        if (
+            $firstname === "" || $lastname === "" || $address === "" ||
+            $zip === "" || $city === "" || $paymentMethod === ""
+        ) {
+            sendJson(false, "Bitte alle Pflichtfelder ausfüllen");
+        }
+
+        if (!preg_match('/^\d{4,5}$/', $zip)) {
+            sendJson(false, "Ungültige PLZ");
+        }
+
+        $db = new DBAccess();
+        $conn = $db->getConnection();
+
+        $methodCheck = $conn->prepare("SELECT id FROM user_payment_methods WHERE user_id = ? AND method = ?");
+        $methodCheck->bind_param("is", $userId, $paymentMethod);
+        $methodCheck->execute();
+        if ($methodCheck->get_result()->num_rows === 0) {
+            sendJson(false, "Ungültige Zahlungsart");
+        }
+
+        $cartStmt = $conn->prepare("
+            SELECT c.product_id, c.quantity, p.price
+            FROM cart c
+            JOIN products p ON p.id = c.product_id
+            WHERE c.user_id = ?
+        ");
+        $cartStmt->bind_param("i", $userId);
+        $cartStmt->execute();
+        $cartItems = $cartStmt->get_result();
+
+        if ($cartItems->num_rows === 0) {
+            sendJson(false, "Dein Warenkorb ist leer");
+        }
+
+        $items = [];
+        $total = 0;
+        while ($row = $cartItems->fetch_assoc()) {
+            $total += $row["price"] * $row["quantity"];
+            $items[] = $row;
+        }
+
+        $orderStmt = $conn->prepare("
+            INSERT INTO orders (user_id, total, firstname, lastname, address, zip, city, payment_method)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        ");
+        $orderStmt->bind_param("idssssss", $userId, $total, $firstname, $lastname, $address, $zip, $city, $paymentMethod);
+        $orderStmt->execute();
+
+        $orderId = $conn->insert_id;
+
+        $itemStmt = $conn->prepare("
+            INSERT INTO order_items (order_id, product_id, quantity, price)
+            VALUES (?, ?, ?, ?)
+        ");
+        foreach ($items as $it) {
+            $itemStmt->bind_param("iiid", $orderId, $it["product_id"], $it["quantity"], $it["price"]);
+            $itemStmt->execute();
+        }
+
+        $clearStmt = $conn->prepare("DELETE FROM cart WHERE user_id = ?");
+        $clearStmt->bind_param("i", $userId);
+        $clearStmt->execute();
+
+        sendJson(true, "Bestellung erfolgreich aufgegeben");
+
+    case "getOrders":
+        startSessionIfNeeded();
+
+        $userId = $_SESSION["user_id"] ?? null;
+        if (!$userId) {
+            sendJson(false, "Nicht eingeloggt");
+        }
+
+        $db = new DBAccess();
+        $conn = $db->getConnection();
+
+        $stmt = $conn->prepare("
+            SELECT id, order_date, total, payment_method
+            FROM orders
+            WHERE user_id = ?
+            ORDER BY order_date DESC
+        ");
+        $stmt->bind_param("i", $userId);
+        $stmt->execute();
+        $result = $stmt->get_result();
+
+        $orders = [];
+        while ($row = $result->fetch_assoc()) {
+            $row["id"] = (int)$row["id"];
+            $row["total"] = (float)$row["total"];
+            $orders[] = $row;
+        }
+
+        sendJson(true, "OK", ["data" => $orders]);
+
+    case "getOrderDetails":
+        startSessionIfNeeded();
+
+        $userId = $_SESSION["user_id"] ?? null;
+        if (!$userId) {
+            sendJson(false, "Nicht eingeloggt");
+        }
+
+        $orderId = isset($_GET["order"]) ? (int)$_GET["order"] : 0;
+        if ($orderId <= 0) {
+            sendJson(false, "Ungültige Bestell-ID");
+        }
+
+        $db = new DBAccess();
+        $conn = $db->getConnection();
+
+        $orderStmt = $conn->prepare("
+            SELECT id, order_date, total, firstname, lastname, address, zip, city, payment_method
+            FROM orders
+            WHERE id = ? AND user_id = ?
+        ");
+        $orderStmt->bind_param("ii", $orderId, $userId);
+        $orderStmt->execute();
+        $order = $orderStmt->get_result()->fetch_assoc();
+
+        if (!$order) {
+            sendJson(false, "Bestellung nicht gefunden");
+        }
+
+        $itemStmt = $conn->prepare("
+            SELECT oi.product_id, oi.quantity, oi.price, p.name, p.image
+            FROM order_items oi
+            JOIN products p ON p.id = oi.product_id
+            WHERE oi.order_id = ?
+        ");
+        $itemStmt->bind_param("i", $orderId);
+        $itemStmt->execute();
+        $itemResult = $itemStmt->get_result();
+
+        $items = [];
+        while ($row = $itemResult->fetch_assoc()) {
+            $row["quantity"] = (int)$row["quantity"];
+            $row["price"] = (float)$row["price"];
+            $row["subtotal"] = round($row["price"] * $row["quantity"], 2);
+            $items[] = $row;
+        }
+
+        $order["total"] = (float)$order["total"];
+
+        sendJson(true, "OK", ["data" => ["order" => $order, "items" => $items]]);
 
     default:
         sendJson(false, "Unknown method");
