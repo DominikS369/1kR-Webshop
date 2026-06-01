@@ -564,6 +564,43 @@ switch ($method) {
 
         sendJson(true, "OK", ["data" => $methods]);
 
+    case "validateCoupon":
+
+        $code = trim($_GET["code"] ?? "");
+        if ($code === "") {
+            sendJson(false, "Kein Gutscheincode angegeben");
+        }
+
+        $db = new DBAccess();
+        $conn = $db->getConnection();
+
+        $stmt = $conn->prepare("
+        SELECT id, code, discount_type, discount_value, expires_at, is_active
+        FROM coupons
+        WHERE code = ?
+    ");
+        $stmt->bind_param("s", $code);
+        $stmt->execute();
+        $result = $stmt->get_result();
+
+        if ($result->num_rows === 0) {
+            sendJson(false, "Ungültiger Gutscheincode");
+        }
+        $coupon = $result->fetch_assoc();
+        if ((int)$coupon["is_active"] !== 1) {
+            sendJson(false, "Gutschein ist nicht mehr gültig");
+        }
+        if ($coupon["expires_at"] < date("Y-m-d")) {
+            sendJson(false, "Gutschein ist abgelaufen");
+        }
+        sendJson(true, "Gutschein gültig", [
+            "data" => [
+                "code"           => $coupon["code"],
+                "discount_type"  => $coupon["discount_type"],
+                "discount_value" => (float)$coupon["discount_value"]
+            ]
+        ]);
+
     case "placeOrder":
         requireMethod("POST");
         startSessionIfNeeded();
@@ -623,6 +660,22 @@ switch ($method) {
             $total += $row["price"] * $row["quantity"];
             $items[] = $row;
         }
+        $couponCode = trim($input["coupon_code"] ?? "");
+        if ($couponCode !== "") {
+            $couponCheck = $conn->prepare("SELECT discount_type, discount_value FROM coupons WHERE code = ? AND is_active = 1 AND expires_at >= CURDATE()");
+            $couponCheck->bind_param("s", $couponCode);
+            $couponCheck->execute();
+            $coupon = $couponCheck->get_result()->fetch_assoc();
+
+            if ($coupon) {
+                if ($coupon["discount_type"] === "percentage") {
+                    $total -= $total * ($coupon["discount_value"] / 100);
+                } else {
+                    $total -= $coupon["discount_value"];
+                }
+                $total = max(0, round($total, 2));
+            }
+        }
 
         $orderStmt = $conn->prepare("
             INSERT INTO orders (user_id, total, firstname, lastname, address, zip, city, payment_method)
@@ -645,6 +698,13 @@ switch ($method) {
         $clearStmt = $conn->prepare("DELETE FROM cart WHERE user_id = ?");
         $clearStmt->bind_param("i", $userId);
         $clearStmt->execute();
+
+        $couponCode = trim($input["coupon_code"] ?? "");
+        if ($couponCode !== "") {
+            $couponStmt = $conn->prepare("UPDATE coupons SET is_active = 0 WHERE code = ?");
+            $couponStmt->bind_param("s", $couponCode);
+            $couponStmt->execute();
+        }
 
         sendJson(true, "Bestellung erfolgreich aufgegeben");
 
@@ -904,6 +964,8 @@ switch ($method) {
             "order" => $order,
             "items" => $items
         ]]);
+
+
 
     default:
         sendJson(false, "Unknown method: '" . $method . "'. GET params: " . json_encode($_GET));

@@ -101,3 +101,17 @@ INSERT INTO products (category_id, name, description, price, rating, image) VALU
 (4, 'Tote Bag Canvas', 'Stoffbeutel mit Print.', 12.90, 3.9, 'placeholder.jpg'),
 (4, 'Sticker-Set', '5 Aufkleber, glänzend.', 4.90, 4.5, 'placeholder.jpg'),
 (4, 'Tasse Logo', 'Keramik, 330ml.', 11.90, 4.2, 'placeholder.jpg');
+
+CREATE TABLE IF NOT EXISTS coupons (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    code VARCHAR(50) NOT NULL UNIQUE,
+    discount_type ENUM('percentage', 'fixed') NOT NULL,
+    discount_value DECIMAL(10,2) NOT NULL,
+    expires_at DATE NOT NULL,
+    is_active TINYINT(1) DEFAULT 1
+);
+
+INSERT INTO coupons (code, discount_type, discount_value, expires_at) VALUES
+('SOMMER10', 'fixed', 10.00, '2026-12-31'),
+('WELCOME5', 'fixed', 5.00, '2026-12-31'),
+('SAVE20', 'percentage', 20.00, '2026-12-31');
