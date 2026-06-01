@@ -148,7 +148,7 @@ form.addEventListener("submit", function (event) {
     }
 
     $.ajax({
-        url: `${API_BASE}?method=placeOrder`,
+        url: API_URL + "?method=placeOrder",
         method: "POST",
         contentType: "application/json",
         dataType: "json",

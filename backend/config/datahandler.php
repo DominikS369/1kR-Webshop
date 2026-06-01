@@ -643,6 +643,109 @@ switch ($method) {
 
         sendJson(true, "Bestellung erfolgreich aufgegeben");
 
+
+    case "getAccountdetails":
+        startSessionIfNeeded();
+
+        $userId = $_SESSION["user_id"] ?? null;
+        if (!$userId) {
+            sendJson(false, "Nicht eingeloggt");
+        }
+        $db = new DBAccess();
+        $conn = $db->getConnection();
+
+        $stmt = $conn->prepare("SELECT * from users WHERE id = ?");
+        $stmt->bind_param("i", $userId);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        if ($result->num_rows === 0) {
+            sendJson(false, "User nicht gefunden");
+        }
+
+        $user = $result->fetch_assoc();
+        $user["password"] = "********";
+        $parts = explode("@", $user["email"]);
+        $user["email"] = substr($parts[0], 0, 1) . str_repeat("*", strlen($parts[0]) - 1) . "@" . $parts[1];
+
+        $payStmt = $conn->prepare("SELECT method FROM user_payment_methods WHERE user_id = ? ORDER BY id");
+        $payStmt->bind_param("i", $userId);
+        $payStmt->execute();
+        $payResult = $payStmt->get_result();
+
+        $methods = [];
+        while ($row = $payResult->fetch_assoc()) {
+            $methods[] = $row["method"];
+        }
+
+        sendJson(true, "OK", ["data" => $user, "payment_methods" => $methods]);
+
+    case "editAccount":
+        requireMethod("POST");
+        startSessionIfNeeded();
+
+        $userId = $_SESSION["user_id"] ?? null;
+        if (!$userId) {
+            sendJson(false, "Nicht eingeloggt");
+        }
+        $input = getJsonInput();
+
+        $salutation     = trim($input["salutation"] ?? "");
+        $firstname      = trim($input["firstname"] ?? "");
+        $lastname       = trim($input["lastname"] ?? "");
+        $email          = strtolower(trim($input["email"] ?? ""));
+        $username       = trim($input["username"] ?? "");
+        $address        = trim($input["address"] ?? "");
+        $zip            = trim($input["zip"] ?? "");
+        $city           = trim($input["city"] ?? "");
+        $password       = $input["password"] ?? "";
+        $paymentMethods = $input["payment_methods"] ?? [];
+
+        if ($firstname === "" || $lastname === "" || $email === "" ||
+            $username === "" || $address === "" || $zip === "" ||
+            $city === "" || $password === "") {
+            sendJson(false, "Bitte alle Pflichtfelder ausfüllen");
+        }
+
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            sendJson(false, "Ungültige E-Mail-Adresse");
+        }
+
+        $db = new DBAccess();
+        $conn = $db->getConnection();
+
+        $pwStmt = $conn->prepare("SELECT password FROM users WHERE id = ?");
+        $pwStmt->bind_param("i", $userId);
+        $pwStmt->execute();
+        $pwRow = $pwStmt->get_result()->fetch_assoc();
+
+        if (!password_verify($password, $pwRow["password"])) {
+            sendJson(false, "Falsches Passwort");
+        }
+        $stmt = $conn->prepare("
+        UPDATE users SET salutation=?, firstname=?, lastname=?, email=?,
+        username=?, address=?, zip=?, city=? WHERE id=?
+    ");
+        $stmt->bind_param("ssssssssi", $salutation, $firstname, $lastname,
+            $email, $username, $address, $zip, $city, $userId);
+        $stmt->execute();
+        $del = $conn->prepare("DELETE FROM user_payment_methods WHERE user_id = ?");
+        $del->bind_param("i", $userId);
+        $del->execute();
+
+        if (!empty($paymentMethods)) {
+            $ins = $conn->prepare("INSERT INTO user_payment_methods (user_id, method) VALUES (?, ?)");
+            foreach ($paymentMethods as $m) {
+                $m = trim($m);
+                if ($m !== "") {
+                    $ins->bind_param("is", $userId, $m);
+                    $ins->execute();
+                }
+            }
+        }
+
+        sendJson(true, "Änderungen gespeichert");
+
+
     case "getOrders":
         startSessionIfNeeded();
 

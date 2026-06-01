@@ -9,6 +9,143 @@ function showMessage(message, type = "danger") {
     messageBox.classList.remove("d-none");
 }
 
+
+function loadAccountdetails() {
+    $.ajax({
+        url: `${API_BASE}?method=getAccountdetails`,
+        method: "GET",
+        dataType: "json",
+        xhrFields: { withCredentials: true },
+        success: function (data) {
+            if (!data.success) {
+                showMessage(data.message);
+                return;
+            }
+
+            const u = data.data;
+            window._accountData = u;
+            window._rawEmail = data.data.email;
+            currentPaymentMethods = [...data.payment_methods];
+
+            const methodsList = data.payment_methods.length > 0
+                ? data.payment_methods.map(m => `<li class="list-group-item">${m}</li>`).join("")
+                : `<li class="list-group-item text-muted">Keine Zahlungsmethoden hinterlegt</li>`;
+
+            document.getElementById("accountDetails").innerHTML = `
+                <ul class="list-group mb-4">
+                    <li class="list-group-item"><strong>Anrede:</strong> ${u.salutation ?? ""}</li>
+                    <li class="list-group-item"><strong>Vorname:</strong> ${u.firstname}</li>
+                    <li class="list-group-item"><strong>Nachname:</strong> ${u.lastname}</li>
+                    <li class="list-group-item"><strong>E-Mail:</strong> ${u.email}</li>
+                    <li class="list-group-item"><strong>Benutzername:</strong> ${u.username}</li>
+                    <li class="list-group-item"><strong>Adresse:</strong> ${u.address}, ${u.zip} ${u.city}</li>
+                    <li class="list-group-item"><strong>Passwort:</strong> ${u.password}</li>
+                </ul>
+                 <h5>Zahlungsmethoden</h5>
+                 <ul class="list-group mb-4">
+                    ${methodsList}
+                 </ul>
+            `;
+        },
+        error: function () {
+            showMessage("Accountdaten konnten nicht geladen werden.");
+        }
+    });
+}
+
+loadAccountdetails();
+
+let currentPaymentMethods = [];
+
+document.getElementById("editBtn").addEventListener("click", () => {
+    const u = window._accountData;
+    document.getElementById("form-salutation").value = u.salutation ?? "";
+    document.getElementById("form-firstname").value = u.firstname;
+    document.getElementById("form-lastname").value = u.lastname;
+    document.getElementById("form-email").value = window._rawEmail;
+    document.getElementById("form-username").value = u.username;
+    document.getElementById("form-address").value = u.address;
+    document.getElementById("form-zip").value = u.zip;
+    document.getElementById("form-city").value = u.city;
+    document.getElementById("form-password").value = "";
+
+    renderPaymentList();
+
+    document.getElementById("accountDetails").classList.add("d-none");
+    document.getElementById("editBtn").classList.add("d-none");
+    document.getElementById("accountForm").classList.remove("d-none");
+});
+
+document.getElementById("cancelBtn").addEventListener("click", () => {
+    document.getElementById("accountForm").classList.add("d-none");
+    document.getElementById("accountDetails").classList.remove("d-none");
+    document.getElementById("editBtn").classList.remove("d-none");
+});
+
+document.getElementById("addPaymentBtn").addEventListener("click", () => {
+    const val = document.getElementById("form-new-payment").value.trim();
+    if (val === "") return;
+    currentPaymentMethods.push(val);
+    document.getElementById("form-new-payment").value = "";
+    renderPaymentList();
+});
+
+function renderPaymentList() {
+    const list = document.getElementById("form-payment-list");
+    list.innerHTML = currentPaymentMethods.map((m, i) => `
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+            ${m}
+            <button class="btn btn-danger btn-sm" onclick="removePayment(${i})">Entfernen</button>
+        </li>
+    `).join("");
+}
+
+function removePayment(index) {
+    currentPaymentMethods.splice(index, 1);
+    renderPaymentList();
+}
+
+document.getElementById("saveBtn").addEventListener("click", () => {
+    const password = document.getElementById("form-password").value;
+    if (password === "") {
+        showMessage("Bitte Passwort eingeben.");
+        return;
+    }
+    $.ajax({
+        url: `${API_BASE}?method=editAccount`,
+        method: "POST",
+        contentType: "application/json",
+        xhrFields: {withCredentials: true},
+        data: JSON.stringify({
+            salutation: document.getElementById("form-salutation").value,
+            firstname: document.getElementById("form-firstname").value.trim(),
+            lastname: document.getElementById("form-lastname").value.trim(),
+            email: document.getElementById("form-email").value.trim(),
+            username: document.getElementById("form-username").value.trim(),
+            address: document.getElementById("form-address").value.trim(),
+            zip: document.getElementById("form-zip").value.trim(),
+            city: document.getElementById("form-city").value.trim(),
+            password: password,
+            payment_methods: currentPaymentMethods
+        }),
+        success: function (data) {
+            if (!data.success) {
+                showMessage(data.message);
+                document.getElementById("form-password").value = "";
+                return;
+            }
+            showMessage("Daten erfolgreich gespeichert.", "success");
+            document.getElementById("accountForm").classList.add("d-none");
+            document.getElementById("accountDetails").classList.remove("d-none");
+            document.getElementById("editBtn").classList.remove("d-none");
+            loadAccountdetails(); // Ansicht neu laden
+        },
+        error: function () {
+            showMessage("Fehler beim Speichern.");
+        }
+    });
+});
+
 function formatDate(dateStr) {
     const d = new Date(dateStr.replace(" ", "T"));
     return d.toLocaleDateString("de-DE") + " " + d.toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" });

@@ -1,4 +1,4 @@
-const LOGIN_API = "http://localhost:8888/1kR-Webshop/backend/config/datahandler.php";
+const LOGIN_API = API_URL + "?method=login";
 
 const form = document.getElementById("loginForm");
 const messageBox = document.getElementById("messageBox");
@@ -28,7 +28,7 @@ form.addEventListener("submit", function (event) {
     const remember = document.getElementById("remember").checked;
 
     $.ajax({
-        url: `${LOGIN_API}?method=login`,
+        url: LOGIN_API,
         method: "POST",
         contentType: "application/json",
         dataType: "json",

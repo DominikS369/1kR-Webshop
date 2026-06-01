@@ -1,4 +1,4 @@
-const REGISTER_API = "http://localhost:8888/1kR-Webshop/backend/config/dataHandler.php";
+const REGISTER_API = API_URL + "?method=register";
 
 const form = document.getElementById("registerForm");
 const messageBox = document.getElementById("messageBox");
@@ -71,7 +71,7 @@ form.addEventListener("submit", function (event) {
     };
 
     $.ajax({
-        url: `${REGISTER_API}?method=register`,
+        url: REGISTER_API,
         method: "POST",
         contentType: "application/json",
         dataType: "json",

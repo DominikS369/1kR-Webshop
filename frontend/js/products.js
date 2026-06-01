@@ -108,8 +108,8 @@ function addToCart(productId, btn) {
 
 function loadProducts(categoryId) {
     const url = categoryId
-        ? `${API_BASE}?method=getProducts&category=${categoryId}`
-        : `${API_BASE}?method=getProducts`;
+        ? API_URL + `?method=getProducts&category=${categoryId}`
+        : API_URL + "?method=getProducts";
 
     $.ajax({
         url: url,
@@ -195,7 +195,7 @@ function initSearch() {
 
 function loadCategories() {
     $.ajax({
-        url: `${API_BASE}?method=getCategories`,
+        url: API_URL + "?method=getCategories",
         method: "GET",
         dataType: "json",
         xhrFields: { withCredentials: true },

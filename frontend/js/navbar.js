@@ -138,7 +138,7 @@ function updateCartCount() {
     if (!badge) return;
 
     $.ajax({
-        url: `${API_BASE}?method=getCartCount`,
+        url: API_URL + "?method=getCartCount",
         method: "GET",
         dataType: "json",
         xhrFields: { withCredentials: true },
