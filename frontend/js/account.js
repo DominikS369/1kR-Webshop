@@ -123,6 +123,11 @@ function renderOrderDetails(order, items, body) {
                 </tr>
             </tfoot>
         </table>
+        <div class="mt-3">
+            <a href="invoice.html?order=${order.id}" class="btn btn-outline-primary btn-sm">
+                <i class="bi bi-printer"></i> Rechnung drucken
+            </a>
+        </div>
     `;
 }
 
