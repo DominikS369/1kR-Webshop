@@ -3,6 +3,7 @@ const IMG_BASE = "/1kR-Webshop/frontend/res/img/";
 const messageBox = document.getElementById("messageBox");
 const cartSummary = document.getElementById("cartSummary");
 const form = document.getElementById("checkoutForm");
+let appliedCoupon = null;
 
 function showMessage(message, type = "danger") {
     messageBox.className = `alert alert-${type}`;
@@ -36,14 +37,19 @@ function renderCartSummary(items, total) {
     cartSummary.innerHTML = `
         <table class="table align-middle bg-white shadow-sm">
             <tbody>${rows}</tbody>
+            
+            
             <tfoot>
                 <tr>
                     <td colspan="3" class="text-end fw-bold">Gesamt:</td>
-                    <td class="text-end fw-bold">${total.toFixed(2)} €</td>
+                    <td class="text-end fw-bold" id="cartTotal">${total.toFixed(2)} €</td>
                 </tr>
             </tfoot>
         </table>
     `;
+    window._cartTotal = total;
+    initCoupon();
+    updateTotal();
 }
 
 function fillForm(userData) {
@@ -109,6 +115,62 @@ function loadUserData() {
             showMessage("Benutzerdaten konnten nicht geladen werden.");
         }
     });
+}
+
+function initCoupon(){
+    document.getElementById("code").addEventListener("blur", () => {
+        const code = document.getElementById("code").value.trim();
+        if (code === "") {
+            appliedCoupon = null;
+            updateTotal();
+            return;
+        }
+        $.ajax({
+            url: `${API_BASE}?method=validateCoupon&code=${encodeURIComponent(code)}`,
+            method: "GET",
+            dataType: "json",
+            xhrFields: { withCredentials: true },
+            success: function (data) {
+                if (!data.success) {
+                    appliedCoupon = null;
+                    showMessage(data.message);
+                    updateTotal();
+                    return;
+                }
+                appliedCoupon = data.data;
+                showMessage("✓ Gutschein eingelöst!", "success");
+                updateTotal();
+            },
+            error: function () {
+                showMessage("Fehler beim Prüfen des Gutscheins.");
+            }
+        });
+    });
+}
+
+function updateTotal() {
+    const total = window._cartTotal;
+    const totalBox = document.getElementById("cartTotal");
+
+    if (!appliedCoupon) {
+        totalBox.textContent = `${total.toFixed(2)} €`;
+        return;
+    }
+
+    let rabatt = 0;
+    if (appliedCoupon.discount_type === "percentage") {
+        rabatt = total * (appliedCoupon.discount_value / 100);
+    } else {
+        rabatt = appliedCoupon.discount_value;
+    }
+
+    const newTotal = Math.max(0, total - rabatt);
+
+    totalBox.innerHTML = `
+        <span class="text-decoration-line-through text-muted">${total.toFixed(2)} €</span>
+        <span class="text-danger ms-2">- ${rabatt.toFixed(2)} €</span>
+        <span class="fw-bold ms-2">${newTotal.toFixed(2)} €</span>
+    `;
 }
 
 form.addEventListener("submit", function (event) {
