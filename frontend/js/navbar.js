@@ -55,7 +55,7 @@ function drawNavbar(nav, user) {
         links += `
             <a href="index.html">Home</a>
             <a href="products.html">Produkte</a>
-            <a href="#">Mein Konto</a>
+            <a href="account.html">Mein Konto</a>
             <span>Eingeloggt als: ${user.username}</span>
             <button id="logoutBtn" class="btn btn-sm btn-danger">Logout</button>
             ${cartLink}

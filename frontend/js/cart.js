@@ -2,6 +2,10 @@ const IMG_BASE = "/1kR-Webshop/backend/product_pictures/";
 
 const cartContent = document.getElementById("cartContent");
 const messageBox = document.getElementById("messageBox");
+const orderArea = document.getElementById("orderArea");
+
+let loggedIn = false;
+let cartHasItems = false;
 
 function showMessage(message, type = "danger") {
     messageBox.className = `alert alert-${type}`;
@@ -10,6 +14,9 @@ function showMessage(message, type = "danger") {
 }
 
 function renderCart(items, total) {
+    cartHasItems = items.length > 0;
+    updateOrderButton();
+
     if (items.length === 0) {
         cartContent.innerHTML = `<p class="text-muted">Dein Warenkorb ist leer.</p>`;
         return;
@@ -129,4 +136,26 @@ function loadCart() {
     });
 }
 
+function updateOrderButton() {
+    if (loggedIn && cartHasItems) {
+        orderArea.classList.remove("d-none");
+    } else {
+        orderArea.classList.add("d-none");
+    }
+}
+
+function checkLogin() {
+    $.ajax({
+        url: `${API_BASE}?method=checkSession`,
+        method: "GET",
+        dataType: "json",
+        xhrFields: { withCredentials: true },
+        success: function (data) {
+            loggedIn = data.success;
+            updateOrderButton();
+        }
+    });
+}
+
 loadCart();
+checkLogin();
