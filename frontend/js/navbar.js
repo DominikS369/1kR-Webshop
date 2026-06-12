@@ -48,7 +48,7 @@ function drawNavbar(nav, user) {
     } else if (Number(user.is_admin) === 1) {
         leftLinks = `
             <a href="index.html">Home</a>
-            <a href="#">Produkte bearbeiten</a>
+            <a href="admin-products.html">Produkte bearbeiten</a>
             <a href="#">Kunden bearbeiten</a>
             <a href="#">Gutscheine verwalten</a>
         `;

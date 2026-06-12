@@ -351,6 +351,215 @@ switch ($method) {
         }
         sendJson(true, "OK", ["data" => $products]);
 
+    case "updateProduct":
+        requireMethod("POST");
+        startSessionIfNeeded();
+
+        if (empty($_SESSION["user_id"]) || (int)($_SESSION["is_admin"] ?? 0) !== 1) {
+            sendJson(false, "Keine Berechtigung");
+        }
+
+        $input = getJsonInput();
+
+        $productId   = (int)($input["id"] ?? 0);
+        $name        = trim($input["name"] ?? "");
+        $description = trim($input["description"] ?? "");
+        $price       = (float)($input["price"] ?? 0);
+        $categoryId  = (int)($input["category_id"] ?? 0);
+
+        if ($productId <= 0 || $name === "" || $price < 0 || $categoryId <= 0) {
+            sendJson(false, "Bitte alle Pflichtfelder korrekt ausfüllen");
+        }
+
+        $db = new DBAccess();
+        $conn = $db->getConnection();
+
+        $stmt = $conn->prepare("
+            UPDATE products
+            SET name = ?, description = ?, price = ?, category_id = ?
+            WHERE id = ?
+        ");
+        $stmt->bind_param("ssdii", $name, $description, $price, $categoryId, $productId);
+        $stmt->execute();
+
+        sendJson(true, "Produkt gespeichert");
+
+    case "uploadProductImage":
+        requireMethod("POST");
+        startSessionIfNeeded();
+
+        if (empty($_SESSION["user_id"]) || (int)($_SESSION["is_admin"] ?? 0) !== 1) {
+            sendJson(false, "Keine Berechtigung");
+        }
+
+        $productId = (int)($_POST["id"] ?? 0);
+        if ($productId <= 0) {
+            sendJson(false, "Ungültige Produkt-ID");
+        }
+
+        if (!isset($_FILES["image"]) || $_FILES["image"]["error"] !== UPLOAD_ERR_OK) {
+            sendJson(false, "Kein gültiger Upload erhalten");
+        }
+
+        $file = $_FILES["image"];
+
+        if ($file["size"] > 5 * 1024 * 1024) {
+            sendJson(false, "Datei zu groß (max. 5 MB)");
+        }
+
+        $allowed = [
+            "image/jpeg" => "jpg",
+            "image/png"  => "png",
+            "image/webp" => "webp",
+            "image/gif"  => "gif"
+        ];
+
+        $finfo = finfo_open(FILEINFO_MIME_TYPE);
+        $mime = finfo_file($finfo, $file["tmp_name"]);
+        finfo_close($finfo);
+
+        if (!isset($allowed[$mime])) {
+            sendJson(false, "Nur JPG, PNG, WEBP oder GIF erlaubt");
+        }
+
+        $ext = $allowed[$mime];
+        $filename = "product_" . $productId . "_" . time() . "." . $ext;
+        $targetDir = __DIR__ . "/../../frontend/res/img/";
+        $targetPath = $targetDir . $filename;
+
+        if (!move_uploaded_file($file["tmp_name"], $targetPath)) {
+            sendJson(false, "Datei konnte nicht gespeichert werden");
+        }
+
+        $db = new DBAccess();
+        $conn = $db->getConnection();
+
+        $oldStmt = $conn->prepare("SELECT image FROM products WHERE id = ?");
+        $oldStmt->bind_param("i", $productId);
+        $oldStmt->execute();
+        $oldRow = $oldStmt->get_result()->fetch_assoc();
+        $oldImage = $oldRow["image"] ?? "";
+
+        $stmt = $conn->prepare("UPDATE products SET image = ? WHERE id = ?");
+        $stmt->bind_param("si", $filename, $productId);
+        $stmt->execute();
+
+        if ($oldImage !== "" && $oldImage !== $filename && $oldImage !== "placeholder.jpg") {
+            $refStmt = $conn->prepare("SELECT COUNT(*) AS cnt FROM products WHERE image = ?");
+            $refStmt->bind_param("s", $oldImage);
+            $refStmt->execute();
+            $stillUsed = (int)($refStmt->get_result()->fetch_assoc()["cnt"] ?? 0);
+
+            $oldPath = $targetDir . basename($oldImage);
+            if ($stillUsed === 0 && is_file($oldPath)) {
+                @unlink($oldPath);
+            }
+        }
+
+        sendJson(true, "Bild aktualisiert", ["image" => $filename]);
+
+    case "deleteProduct":
+        requireMethod("POST");
+        startSessionIfNeeded();
+
+        if (empty($_SESSION["user_id"]) || (int)($_SESSION["is_admin"] ?? 0) !== 1) {
+            sendJson(false, "Keine Berechtigung");
+        }
+
+        $input = getJsonInput();
+        $productId = (int)($input["id"] ?? 0);
+        if ($productId <= 0) {
+            sendJson(false, "Ungültige Produkt-ID");
+        }
+
+        $db = new DBAccess();
+        $conn = $db->getConnection();
+
+        $refStmt = $conn->prepare("SELECT COUNT(*) AS cnt FROM order_items WHERE product_id = ?");
+        $refStmt->bind_param("i", $productId);
+        $refStmt->execute();
+        $referenced = (int)($refStmt->get_result()->fetch_assoc()["cnt"] ?? 0);
+
+        if ($referenced > 0) {
+            $stmt = $conn->prepare("UPDATE products SET is_active = 0 WHERE id = ?");
+            $stmt->bind_param("i", $productId);
+            $stmt->execute();
+            sendJson(true, "Produkt wurde deaktiviert und ist nicht mehr im Shop sichtbar");
+        }
+
+        $imgStmt = $conn->prepare("SELECT image FROM products WHERE id = ?");
+        $imgStmt->bind_param("i", $productId);
+        $imgStmt->execute();
+        $image = $imgStmt->get_result()->fetch_assoc()["image"] ?? "";
+
+        $delCart = $conn->prepare("DELETE FROM cart WHERE product_id = ?");
+        $delCart->bind_param("i", $productId);
+        $delCart->execute();
+
+        $del = $conn->prepare("DELETE FROM products WHERE id = ?");
+        $del->bind_param("i", $productId);
+        $del->execute();
+
+        if ($image !== "" && $image !== "placeholder.jpg") {
+            $usedStmt = $conn->prepare("SELECT COUNT(*) AS cnt FROM products WHERE image = ?");
+            $usedStmt->bind_param("s", $image);
+            $usedStmt->execute();
+            $stillUsed = (int)($usedStmt->get_result()->fetch_assoc()["cnt"] ?? 0);
+
+            $imgPath = __DIR__ . "/../../frontend/res/img/" . basename($image);
+            if ($stillUsed === 0 && is_file($imgPath)) {
+                @unlink($imgPath);
+            }
+        }
+
+        sendJson(true, "Produkt gelöscht");
+
+    case "createProduct":
+        requireMethod("POST");
+        startSessionIfNeeded();
+
+        if (empty($_SESSION["user_id"]) || (int)($_SESSION["is_admin"] ?? 0) !== 1) {
+            sendJson(false, "Keine Berechtigung");
+        }
+
+        $input = getJsonInput();
+
+        $name        = trim($input["name"] ?? "");
+        $description = trim($input["description"] ?? "");
+        $price       = $input["price"] ?? null;
+        $categoryId  = (int)($input["category_id"] ?? 0);
+
+        if ($name === "") {
+            sendJson(false, "Bitte einen Produktnamen angeben");
+        }
+        if (!is_numeric($price) || (float)$price < 0) {
+            sendJson(false, "Bitte einen gültigen Preis angeben");
+        }
+        if ($categoryId <= 0) {
+            sendJson(false, "Bitte eine Kategorie wählen");
+        }
+
+        $price = (float)$price;
+
+        $db = new DBAccess();
+        $conn = $db->getConnection();
+
+        $catStmt = $conn->prepare("SELECT id FROM categories WHERE id = ?");
+        $catStmt->bind_param("i", $categoryId);
+        $catStmt->execute();
+        if ($catStmt->get_result()->num_rows === 0) {
+            sendJson(false, "Unbekannte Kategorie");
+        }
+
+        $stmt = $conn->prepare("
+            INSERT INTO products (category_id, name, description, price, image, is_active)
+            VALUES (?, ?, ?, ?, 'placeholder.jpg', 1)
+        ");
+        $stmt->bind_param("issd", $categoryId, $name, $description, $price);
+        $stmt->execute();
+
+        sendJson(true, "Produkt angelegt", ["id" => $conn->insert_id]);
+
 
     case "addToCart":
         requireMethod("POST");
