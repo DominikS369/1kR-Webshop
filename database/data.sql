@@ -89,12 +89,12 @@ INSERT INTO categories (name) VALUES
 ('Shirts'), ('Hoodies'), ('Caps'), ('Accessoires');
 
 INSERT INTO products (category_id, name, description, price, rating, image) VALUES
-(1, 'Tausend Rosen Basic Tee', 'Schwarzes Shirt mit Logo-Print vorne.', 24.90, 4.5, 'placeholder.jpg'),
-(1, 'Rosen Tour Shirt 2025', 'Limitiertes Tour-Shirt, weiß mit Backprint.', 29.90, 4.8, 'placeholder.jpg'),
-(1, 'Vintage Logo Tee', 'Washed-Look, Unisex-Schnitt.', 27.50, 4.2, 'placeholder.jpg'),
-(2, 'Classic Hoodie schwarz', 'Schwerer Baumwoll-Hoodie mit gesticktem Logo.', 59.90, 4.7, 'placeholder.jpg'),
-(2, 'Zip-Hoodie grau', 'Mit Reißverschluss, weicher Innenstoff.', 64.90, 4.4, 'placeholder.jpg'),
-(2, 'Oversize Hoodie', 'Boxy Fit, in Sand.', 69.00, 4.6, 'placeholder.jpg'),
+(1, 'Tausend Rosen Basic Tee', 'Schwarzes Shirt mit Logo-Print vorne.', 24.90, 4.5, 'Tausend Rosen Basic Tee.jpeg'),
+(1, 'Rosen Tour Shirt 2025', 'Limitiertes Tour-Shirt, weiß mit Backprint.', 29.90, 4.8, 'Tausend Rosen Basic Tee Weiss.jpeg'),
+(1, 'Vintage Logo Tee', 'Washed-Look, Unisex-Schnitt.', 27.50, 4.2, 'Vintage Logo Tee.jpeg'),
+(2, 'Classic Hoodie schwarz', 'Schwerer Baumwoll-Hoodie mit gesticktem Logo.', 59.90, 4.7, 'Classic Hoodie schwarz.jpeg'),
+(2, 'Zip-Hoodie grau', 'Mit Reißverschluss, weicher Innenstoff.', 64.90, 4.4, 'Zip-Hoodie grau.jpeg'),
+(2, 'Oversize Hoodie', 'Boxy Fit, in Sand.', 69.00, 4.6, 'Oversize Hoodie.jpeg'),
 (3, 'Snapback Cap schwarz', 'Verstellbare Snapback mit Stick-Logo.', 19.90, 4.3, 'placeholder.jpg'),
 (3, 'Dad Cap Beige', 'Curved Brim, dezentes Logo.', 18.50, 4.0, 'placeholder.jpg'),
 (3, 'Beanie Winter', 'Warm gefüttert, einheitsgröße.', 16.90, 4.1, 'placeholder.jpg'),
