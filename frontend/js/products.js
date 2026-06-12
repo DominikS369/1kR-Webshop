@@ -43,7 +43,7 @@ function renderProducts(products) {
                         <span class="fw-bold">${p.price.toFixed(2)} €</span>
                         <span class="text-warning small" title="${p.rating}">${ratingStars(p.rating)}</span>
                     </div>
-                    <button class="btn btn-primary btn-sm w-100 mt-3" data-product-id="${p.id}">
+                    <button class="btn btn-dark btn-sm w-100 mt-3" data-product-id="${p.id}">
                         In den Warenkorb
                     </button>
                 </div>
@@ -90,11 +90,11 @@ function addToCart(productId, btn) {
             }
 
             const original = btn.textContent;
-            btn.classList.replace("btn-primary", "btn-success");
+            btn.classList.replace("btn-dark", "btn-success");
             btn.textContent = "✓ Hinzugefügt";
 
             setTimeout(() => {
-                btn.classList.replace("btn-success", "btn-primary");
+                btn.classList.replace("btn-success", "btn-dark");
                 btn.textContent = original;
                 btn.disabled = false;
             }, 1200);
@@ -133,8 +133,8 @@ function updateActiveButton() {
     const buttons = filterBox.querySelectorAll("button");
     for (const b of buttons) {
         const isActive = Number(b.dataset.categoryId) === activeCategory;
-        b.classList.toggle("btn-primary", isActive);
-        b.classList.toggle("btn-outline-primary", !isActive);
+        b.classList.toggle("btn-dark", isActive);
+        b.classList.toggle("btn-outline-dark", !isActive);
     }
 }
 
@@ -143,7 +143,7 @@ function renderCategoryButtons(categories) {
 
     for (const cat of categories) {
         const btn = document.createElement("button");
-        btn.className = "btn btn-outline-primary btn-sm";
+        btn.className = "btn btn-outline-dark btn-sm";
         btn.textContent = cat.name;
         btn.dataset.categoryId = cat.id;
         btn.addEventListener("click", () => {

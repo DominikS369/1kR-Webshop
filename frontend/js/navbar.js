@@ -21,51 +21,70 @@ function renderNavbar() {
 }
 
 function drawNavbar(nav, user) {
-    let links = `
+    const brand = `
         <a class="navbar-brand" href="index.html">
-    <img src="../res/img/placeholder.jpg" alt="Tausend Rosen" height="100"></a>
-        <div class="d-flex gap-3 align-items-center">
+            <img src="../res/img/logo-rune.png" alt="" height="56">
+        </a>
     `;
 
     const cartLink = `
-        <a href="cart.html" class="position-relative text-decoration-none ms-auto" title="Warenkorb">
+        <a href="cart.html" class="position-relative text-decoration-none" title="Warenkorb">
             <i class="bi bi-cart3 fs-4"></i>
             <span id="cartCountBadge" class="badge bg-danger rounded-pill position-absolute top-0 start-100 translate-middle d-none">0</span>
         </a>
     `;
 
+    let leftLinks, rightLinks;
     if (!user) {
-        links += `
+        leftLinks = `
             <a href="index.html">Home</a>
             <a href="products.html">Produkte</a>
+        `;
+        rightLinks = `
             <a href="login.html">Login</a>
             <a href="register.html">Registrieren</a>
             ${cartLink}
         `;
     } else if (Number(user.is_admin) === 1) {
-        links += `
+        leftLinks = `
             <a href="index.html">Home</a>
             <a href="#">Produkte bearbeiten</a>
             <a href="#">Kunden bearbeiten</a>
             <a href="#">Gutscheine verwalten</a>
+        `;
+        rightLinks = `
             <span>Eingeloggt als: ${user.username}</span>
             <button id="logoutBtn" class="btn btn-sm btn-danger">Logout</button>
         `;
     } else {
-        links += `
+        leftLinks = `
             <a href="index.html">Home</a>
             <a href="products.html">Produkte</a>
             <a href="account.html">Mein Konto</a>
+        `;
+        rightLinks = `
             <span>Eingeloggt als: ${user.username}</span>
             <button id="logoutBtn" class="btn btn-sm btn-danger">Logout</button>
             ${cartLink}
         `;
     }
 
-    links += `</div>`;
+    const navContent = `
+        <div class="d-flex align-items-center gap-4 flex-wrap">
+            ${brand}
+            ${leftLinks}
+        </div>
+        <div class="d-flex align-items-center gap-4 flex-wrap ms-auto">
+            ${rightLinks}
+        </div>
+    `;
 
-    nav.className = "navbar navbar-expand-lg bg-body-tertiary px-3";
-    nav.innerHTML = links;
+    nav.className = "navbar navbar-expand-lg bg-body-tertiary py-2";
+    nav.innerHTML = `
+        <div class="page-container d-flex align-items-center gap-4 flex-wrap fs-5">
+            ${navContent}
+        </div>
+    `;
 
     const logoutBtn = document.getElementById("logoutBtn");
     if (logoutBtn) {

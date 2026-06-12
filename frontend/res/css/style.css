@@ -1,0 +1,135 @@
+:root {
+  --tr-black: #1a1a1a;
+  --tr-cream: #f7f4ef;
+  --tr-rose: #b5485b;
+  --tr-gray: #6e6a64;
+  --tr-border: #e3ddd3;
+  --tr-white: #ffffff;
+}
+
+body {
+  background-color: var(--tr-cream);
+  color: var(--tr-black);
+  font-family: "Helvetica Neue", Arial, sans-serif;
+}
+
+a {
+  color: var(--tr-black);
+}
+
+a:hover {
+  color: var(--tr-rose);
+}
+
+.container {
+  max-width: 1100px;
+  text-align: center;
+}
+
+.page-container {
+  width: 100%;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding-left: 0.75rem;
+  padding-right: 0.75rem;
+}
+
+/* Navbar */
+.navbar {
+  background-color: var(--tr-cream) !important;
+  border-bottom: 1px solid var(--tr-border);
+}
+
+.navbar-brand img {
+  height: 70px;
+}
+
+.navbar .navbar-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.navbar a {
+  text-decoration: none;
+  font-size: 1.5rem;
+  letter-spacing: 0.02em;
+}
+
+.navbar button,
+.navbar span {
+  font-size: 1rem;
+}
+
+/* Buttons */
+.btn-dark, .btn-primary {
+  background-color: var(--tr-black);
+  border-color: var(--tr-black);
+}
+
+.btn-dark:hover, .btn-primary:hover {
+  background-color: var(--tr-rose);
+  border-color: var(--tr-rose);
+}
+
+.btn-outline-secondary {
+  border-color: var(--tr-border);
+  color: var(--tr-black);
+}
+
+/* Hero */
+.hero {
+  text-align: center;
+  padding: 4rem 1rem 3rem;
+}
+
+.hero img.hero-logo {
+  height: 120px;
+  margin-bottom: 1.5rem;
+}
+
+.hero img.hero-wordmark {
+  height: 120px;
+  margin-bottom: 1rem;
+}
+
+.hero p.lead {
+  color: var(--tr-gray);
+  font-size: 1.3rem;
+}
+
+.hero img.hero-logo,
+.hero img.hero-wordmark {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Product cards */
+.card {
+  border: 1px solid var(--tr-border);
+  background-color: #f7f4ef;
+}
+
+.card-img-top {
+  object-fit: contain;
+  background-color: var(--tr-white);
+  height: 220px;
+  padding: 0.5rem;
+}
+
+.card-title {
+  font-weight: 600;
+}
+
+.text-warning {
+  color: var(--tr-rose) !important;
+}
+
+#categoryFilter .btn {
+  border-radius: 20px;
+}
+
+#productGrid {
+  justify-content: center;
+}
