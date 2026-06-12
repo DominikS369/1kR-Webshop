@@ -1,4 +1,4 @@
-const IMG_BASE = "/1kR-Webshop/backend/product_pictures/";
+const IMG_BASE = "/1kR-Webshop/frontend/res/img/";
 
 const cartContent = document.getElementById("cartContent");
 const messageBox = document.getElementById("messageBox");
@@ -26,7 +26,7 @@ function renderCart(items, total) {
     for (const it of items) {
         rows += `
             <tr>
-                <td><img src="${IMG_BASE}${it.image}" alt="${it.name}" style="width:60px;height:auto;"></td>
+                <td><img src="${IMG_BASE}${it.image}" class="card-img-top" alt="${it.name}" draggable="false" style="width:60px;height:auto;"></td>
                 <td>${it.name}</td>
                 <td>${it.price.toFixed(2)} €</td>
                 <td>
