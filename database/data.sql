@@ -86,7 +86,7 @@ CREATE TABLE IF NOT EXISTS invoices (
 );
 
 INSERT INTO categories (name) VALUES
-('Shirts'), ('Hoodies'), ('Caps'), ('Accessoires');
+('Tonträger'),('Shirts'), ('Hoodies'), ('Caps'), ('Accessoires');
 
 INSERT INTO products (category_id, name, description, price, rating, image) VALUES
 (1, 'Tausend Rosen Basic Tee', 'Schwarzes Shirt mit Logo-Print vorne.', 24.90, 4.5, 'Tausend Rosen Basic Tee.jpeg'),
@@ -100,7 +100,9 @@ INSERT INTO products (category_id, name, description, price, rating, image) VALU
 (3, 'Beanie Winter', 'Warm gefüttert, einheitsgröße.', 16.90, 4.1, 'placeholder.jpg'),
 (4, 'Tote Bag Canvas', 'Stoffbeutel mit Print.', 12.90, 3.9, 'placeholder.jpg'),
 (4, 'Sticker-Set', '5 Aufkleber, glänzend.', 4.90, 4.5, 'placeholder.jpg'),
-(4, 'Tasse Logo', 'Keramik, 330ml.', 11.90, 4.2, 'placeholder.jpg');
+(4, 'Tasse Logo', 'Keramik, 330ml.', 11.90, 4.2, 'placeholder.jpg'),
+(4, 'CD Album "Das kleine Schwarze"', 'Das kleine Schwarze ist das Debütalbum der österreichischen Band Tausend Rosen aus Wien, das im November 2022 erschienen ist. Die fünfköpfige Band spielt eine sehr eigenständige, deutschsprachige Rock- und Popmusik, die live im Studio eingespielt wurde und sich nicht in gängige Schubladen stecken lässt.', 15.99, 5.0, 'product_25_1781274834.png');
+
 
 CREATE TABLE IF NOT EXISTS coupons (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -115,3 +117,11 @@ INSERT INTO coupons (code, discount_type, discount_value, expires_at) VALUES
 ('SOMMER10', 'fixed', 10.00, '2026-12-31'),
 ('WELCOME5', 'fixed', 5.00, '2026-12-31'),
 ('SAVE20', 'percentage', 20.00, '2026-12-31');
+
+--PW: tausendrosen
+
+INSERT INTO users (id, salutation, firstname, lastname, address, zip, city, email, username, password, payment_info, is_admin, is_active) VALUES
+(1, 'Herr', 'Dominik', 'Sommer', 'Spechtgasse 72', '2340', 'Mödling', 'wi24b118@technikum-wien.at', 'Dom', '$2y$10$23MfFcgEKBosPD2sh6rqJ.Pqa.YMr/2nQE8cnuqfFNsYWnvr9TODG', '', 0, 1),
+(2, 'Herr', 'Mika', 'Stermann', 'Hochstädtplatz 4', '1220', 'Wien', 'mika@tausendrosen.at', 'Mika', '$2y$10$OL44P5vs4oA5NZKSMwKjx.FJb0ZlxEtDaxeaaSVCLNC3ZbgOIPcoC', '', 0, 1),
+(3, 'Frau', 'Aylin', 'Karacsonyi', 'Dresdner Straße 9', '1220', 'Wien', 'aylin@tausendrosen.at', 'Aylin', '$2y$10$7WFRpme/j0FyTEZ8GSaRcOrc714l1Ueeon1CQddyphuVLWrryYXoC', '', 0, 1),
+(4, 'Divers', 'Helmuth', 'Lammer', 'Jägerstraße 5', '1220', 'Wien', 'lammer@tausendrosen.at', 'Admin', '$2y$10$iBnQNS5oo03uiCB3slRGhe6IBsZ3OeffDFURoJd3lam4L3wiHZh1S', '', 1, 1);
