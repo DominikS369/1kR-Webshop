@@ -50,7 +50,7 @@ function drawNavbar(nav, user) {
             <a href="index.html">Home</a>
             <a href="admin-products.html">Produkte bearbeiten</a>
             <a href="admin-users.html">Kunden verwalten</a>
-            <a href="#">Gutscheine verwalten</a>
+            <a href="admin-coupons.html">Gutscheine verwalten</a>
         `;
         rightLinks = `
             <span>Eingeloggt als: ${user.username}</span>

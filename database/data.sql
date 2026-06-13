@@ -118,6 +118,8 @@ INSERT INTO coupons (code, discount_type, discount_value, expires_at) VALUES
 ('WELCOME5', 'fixed', 5.00, '2026-12-31'),
 ('SAVE20', 'percentage', 20.00, '2026-12-31');
 
+ALTER TABLE `coupons` ADD COLUMN `is_used` TINYINT(1) DEFAULT 0;
+
 --PW: tausendrosen
 
 INSERT INTO users (id, salutation, firstname, lastname, address, zip, city, email, username, password, payment_info, is_admin, is_active) VALUES
