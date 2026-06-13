@@ -49,7 +49,7 @@ function drawNavbar(nav, user) {
         leftLinks = `
             <a href="index.html">Home</a>
             <a href="admin-products.html">Produkte bearbeiten</a>
-            <a href="#">Kunden bearbeiten</a>
+            <a href="admin-users.html">Kunden verwalten</a>
             <a href="#">Gutscheine verwalten</a>
         `;
         rightLinks = `

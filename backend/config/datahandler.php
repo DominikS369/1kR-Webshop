@@ -1175,7 +1175,155 @@ switch ($method) {
         ]]);
 
 
+    case "getAllUsers":
+        requireMethod("GET");
+        startSessionIfNeeded();
 
+        if (empty($_SESSION["user_id"]) || (int)($_SESSION["is_admin"] ?? 0) !== 1) {
+            sendJson(false, "Keine Berechtigung");
+        }
+
+        $db = new DBAccess();
+        $conn = $db->getConnection();
+
+        $stmt = $conn->prepare("SELECT id, username, firstname, lastname, email, salutation, address, zip, city, payment_info, is_admin, is_active FROM users ORDER BY id DESC");
+        $stmt->execute();
+        $result = $stmt->get_result();
+
+        $users = [];
+        while ($row = $result->fetch_assoc()) {
+            $users[] = $row;
+        }
+        sendJson(true, "OK", ["users" => $users]);
+
+    case "getUserOrders":
+        requireMethod("GET");
+        startSessionIfNeeded();
+
+        if (empty($_SESSION["user_id"]) || (int)($_SESSION["is_admin"] ?? 0) !== 1) {
+            sendJson(false, "Keine Berechtigung");
+        }
+
+
+        $userId = (int)($_GET["user_id"] ?? 0);
+        if ($userId === 0) {
+            sendJson(false, "Ungültige User ID");
+        }
+
+        $db = new DBAccess();
+        $conn = $db->getConnection();
+
+        $stmt = $conn->prepare("SELECT id, order_date, total, firstname, lastname, address, zip, city, payment_method FROM orders WHERE user_id = ? ORDER BY order_date DESC");
+        $stmt->bind_param("i", $userId);
+        $stmt->execute();
+        $result = $stmt->get_result();
+
+        $orders = [];
+        while ($row = $result->fetch_assoc()) {
+            $orders[] = $row;
+        }
+        sendJson(true, "OK", ["orders" => $orders]);
+
+
+    case "toggleUser":
+        requireMethod("POST");
+        startSessionIfNeeded();
+
+        if (empty($_SESSION["user_id"]) || (int)($_SESSION["is_admin"] ?? 0) !== 1) {
+            sendJson(false, "Keine Berechtigung");
+        }
+
+        $userId   = (int)($_POST["user_id"] ?? 0);
+        $isActive = (int)($_POST["is_active"] ?? 0);
+
+        if ($userId === 0) {
+            sendJson(false, "Ungültige User ID");
+        }
+
+
+        if ($userId === (int)$_SESSION["user_id"]) {
+            sendJson(false, "Du kannst dich nicht selbst deaktivieren.");
+        }
+
+        $db = new DBAccess();
+        $conn = $db->getConnection();
+
+        $stmt = $conn->prepare("UPDATE users SET is_active = ? WHERE id = ?");
+        $stmt->bind_param("ii", $isActive, $userId);
+        $stmt->execute();
+
+        if ($stmt->affected_rows === 0) {
+            sendJson(false, "Benutzer nicht gefunden.");
+        }
+
+        sendJson(true, $isActive == 1 ? "Kunde aktiviert." : "Kunde deaktiviert.");
+
+    case "getOrderItems":
+        requireMethod("GET");
+        startSessionIfNeeded();
+
+        if (empty($_SESSION["user_id"]) || (int)($_SESSION["is_admin"] ?? 0) !== 1) {
+            sendJson(false, "Keine Berechtigung");
+        }
+
+        $orderId = (int)($_GET["order_id"] ?? 0);
+        if ($orderId === 0) sendJson(false, "Ungültige Order ID");
+
+        $db = new DBAccess();
+        $conn = $db->getConnection();
+
+        $stmt = $conn->prepare("
+        SELECT oi.id, oi.quantity, oi.price, p.name AS product_name
+        FROM order_items oi
+        JOIN products p ON p.id = oi.product_id
+        WHERE oi.order_id = ?
+    ");
+        $stmt->bind_param("i", $orderId);
+        $stmt->execute();
+        $result = $stmt->get_result();
+
+        $items = [];
+        while ($row = $result->fetch_assoc()) {
+            $items[] = $row;
+        }
+        sendJson(true, "OK", ["items" => $items]);
+
+    case "removeOrderItem":
+        requireMethod("POST");
+        startSessionIfNeeded();
+
+        if (empty($_SESSION["user_id"]) || (int)($_SESSION["is_admin"] ?? 0) !== 1) {
+            sendJson(false, "Keine Berechtigung");
+        }
+
+        $itemId = (int)($_POST["item_id"] ?? 0);
+        if ($itemId === 0) {
+            sendJson(false, "Ungültige Item ID");
+        }
+
+        $db = new DBAccess();
+        $conn = $db->getConnection();
+
+
+        $stmt = $conn->prepare("SELECT order_id, price, quantity FROM order_items WHERE id = ?");
+        $stmt->bind_param("i", $itemId);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $item = $result->fetch_assoc();
+
+        if (!$item) {
+            sendJson(false, "Produkt nicht gefunden.");
+        }
+
+        $stmt = $conn->prepare("DELETE FROM order_items WHERE id = ?");
+        $stmt->bind_param("i", $itemId);
+        $stmt->execute();
+
+        $stmt = $conn->prepare("UPDATE orders SET total = (SELECT SUM(price * quantity) FROM order_items WHERE order_id = ?) WHERE id = ?");
+        $stmt->bind_param("ii", $item["order_id"], $item["order_id"]);
+        $stmt->execute();
+
+        sendJson(true, "Produkt aus Bestellung entfernt.");
     default:
         sendJson(false, "Unknown method: '" . $method . "'. GET params: " . json_encode($_GET));
 }
