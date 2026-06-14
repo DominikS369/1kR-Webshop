@@ -16,7 +16,7 @@ CREATE TABLE IF NOT EXISTS users (
     is_active TINYINT(1) DEFAULT 1
 );
 
---PW: tausendrosen
+-- PW: tausendrosen
 
 INSERT INTO users (id, salutation, firstname, lastname, address, zip, city, email, username, password, payment_info, is_admin, is_active) VALUES
 (1, 'Herr', 'Dominik', 'Sommer', 'Spechtgasse 72', '2340', 'Mödling', 'wi24b118@technikum-wien.at', 'Dom', '$2y$10$23MfFcgEKBosPD2sh6rqJ.Pqa.YMr/2nQE8cnuqfFNsYWnvr9TODG', '', 0, 1),
@@ -63,6 +63,7 @@ CREATE TABLE IF NOT EXISTS orders (
     zip VARCHAR(10) NOT NULL,
     city VARCHAR(100) NOT NULL,
     payment_method VARCHAR(50) NOT NULL,
+    status VARCHAR(20) NOT NULL DEFAULT 'offen',
     FOREIGN KEY (user_id) REFERENCES users(id)
 );
 

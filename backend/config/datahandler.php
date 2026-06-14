@@ -1052,7 +1052,7 @@ switch ($method) {
         $conn = $db->getConnection();
 
         $stmt = $conn->prepare("
-            SELECT id, order_date, total, payment_method
+            SELECT id, order_date, total, payment_method, status
             FROM orders
             WHERE user_id = ?
             ORDER BY order_date DESC
@@ -1233,7 +1233,7 @@ switch ($method) {
         $db = new DBAccess();
         $conn = $db->getConnection();
 
-        $stmt = $conn->prepare("SELECT id, order_date, total, firstname, lastname, address, zip, city, payment_method FROM orders WHERE user_id = ? ORDER BY order_date DESC");
+        $stmt = $conn->prepare("SELECT id, order_date, total, firstname, lastname, address, zip, city, payment_method, status FROM orders WHERE user_id = ? ORDER BY order_date DESC");
         $stmt->bind_param("i", $userId);
         $stmt->execute();
         $result = $stmt->get_result();
@@ -1344,6 +1344,40 @@ switch ($method) {
         $stmt->execute();
 
         sendJson(true, "Produkt aus Bestellung entfernt.");
+
+    case "cancelOrder":
+        requireMethod("POST");
+        startSessionIfNeeded();
+
+        if (empty($_SESSION["user_id"]) || (int)($_SESSION["is_admin"] ?? 0) !== 1) {
+            sendJson(false, "Keine Berechtigung");
+        }
+
+        $orderId = (int)($_POST["order_id"] ?? 0);
+        if ($orderId <= 0) {
+            sendJson(false, "Ungültige Order ID");
+        }
+
+        $db = new DBAccess();
+        $conn = $db->getConnection();
+
+        $check = $conn->prepare("SELECT status FROM orders WHERE id = ?");
+        $check->bind_param("i", $orderId);
+        $check->execute();
+        $existing = $check->get_result()->fetch_assoc();
+
+        if (!$existing) {
+            sendJson(false, "Bestellung nicht gefunden.");
+        }
+        if ($existing["status"] === "storniert") {
+            sendJson(false, "Bestellung ist bereits storniert.");
+        }
+
+        $stmt = $conn->prepare("UPDATE orders SET status = 'storniert' WHERE id = ?");
+        $stmt->bind_param("i", $orderId);
+        $stmt->execute();
+
+        sendJson(true, "Bestellung storniert.");
 
 
     case "getCoupons":
