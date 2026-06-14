@@ -873,14 +873,17 @@ switch ($method) {
             $items[] = $row;
         }
         $couponCode = trim($input["coupon_code"] ?? "");
-        error_log("Coupon Code: " . $couponCode);
+        $coupon = null;
         if ($couponCode !== "") {
-            $couponCheck = $conn->prepare("SELECT discount_type, discount_value FROM coupons WHERE code = ? AND is_active = 1 AND expires_at >= CURDATE()");
-            $couponCheck->bind_param("s", $couponCode);
-            $couponCheck->execute();
-            error_log("Affected rows: " . $conn->affected_rows);
-
-            $coupon = $couponCheck->get_result()->fetch_assoc();
+            $couponStmt = $conn->prepare("
+            SELECT * FROM coupons 
+            WHERE code = ? 
+              AND is_used = 0 
+              AND expires_at >= CURDATE()
+        ");
+            $couponStmt->bind_param("s", $couponCode);
+            $couponStmt->execute();
+            $coupon = $couponStmt->get_result()->fetch_assoc();
 
             if ($coupon) {
                 if ($coupon["discount_type"] === "percentage") {
@@ -891,6 +894,7 @@ switch ($method) {
                 $total = max(0, round($total, 2));
             }
         }
+
 
         $orderStmt = $conn->prepare("
             INSERT INTO orders (user_id, total, firstname, lastname, address, zip, city, payment_method)
@@ -914,13 +918,11 @@ switch ($method) {
         $clearStmt->bind_param("i", $userId);
         $clearStmt->execute();
 
-        $couponCode = trim($input["coupon_code"] ?? "");
-        if ($couponCode !== "") {
-            $couponStmt = $conn->prepare("UPDATE coupons SET is_active = 0, is_used = 1 WHERE code = ?");
-            $couponStmt->bind_param("s", $couponCode);
-            $couponStmt->execute();
+        if (!empty($coupon)) {
+            $markUsed = $conn->prepare("UPDATE coupons SET is_used = 1 WHERE code = ?");
+            $markUsed->bind_param("s", $couponCode);
+            $markUsed->execute();
         }
-
         sendJson(true, "Bestellung erfolgreich aufgegeben");
 
 

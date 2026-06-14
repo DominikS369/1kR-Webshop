@@ -187,8 +187,6 @@ document.addEventListener("DOMContentLoaded", function () {
     document.getElementById("couponBtn").addEventListener("click", validateCouponManual);
 
     form.addEventListener("submit", function (event) {
-
-    form.addEventListener("submit", function (event) {
         event.preventDefault();
         clearMessage();
 
