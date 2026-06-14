@@ -80,8 +80,19 @@
               </div>
 
               <div class="col-12">
-                <label for="payment_info" class="form-label">Zahlungsinformationen</label>
-                <textarea id="payment_info" name="payment_info" class="form-control" rows="3"></textarea>
+                <label class="form-label">Zahlungsarten * <small class="text-muted">(mindestens eine wählen)</small></label>
+                <div class="form-check">
+                  <input class="form-check-input payment-checkbox" type="checkbox" value="Auf Rechnung" id="pm-rechnung">
+                  <label class="form-check-label" for="pm-rechnung">Auf Rechnung</label>
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input payment-checkbox" type="checkbox" value="Kreditkarte" id="pm-kreditkarte">
+                  <label class="form-check-label" for="pm-kreditkarte">Kreditkarte</label>
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input payment-checkbox" type="checkbox" value="PayPal" id="pm-paypal">
+                  <label class="form-check-label" for="pm-paypal">PayPal</label>
+                </div>
               </div>
             </div>
 
@@ -99,7 +110,7 @@
   </div>
 </div>
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-<script src="../js/config.js"></script>  <!-- ← DIESE ZEILE HINZUFÜGEN (ZUERST!)-->
+<script src="../js/config.js"></script>
 <script src="../js/register.js"></script>
 </body>
 </html>
