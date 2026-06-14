@@ -16,7 +16,7 @@ CREATE TABLE IF NOT EXISTS users (
     is_active TINYINT(1) DEFAULT 1
 );
 
---PW: tausendrosen
+-- PW: tausendrosen
 
 INSERT INTO users (id, salutation, firstname, lastname, address, zip, city, email, username, password, payment_info, is_admin, is_active) VALUES
 (1, 'Herr', 'Dominik', 'Sommer', 'Spechtgasse 72', '2340', 'Mödling', 'wi24b118@technikum-wien.at', 'Dom', '$2y$10$23MfFcgEKBosPD2sh6rqJ.Pqa.YMr/2nQE8cnuqfFNsYWnvr9TODG', '', 0, 1),
@@ -97,20 +97,20 @@ INSERT INTO categories (name) VALUES
 ('Tonträger'),('Shirts'), ('Hoodies'), ('Caps'), ('Accessoires');
 
 INSERT INTO products (category_id, name, description, price, rating, image) VALUES
-(1, 'T-Shirt "Tausend Rosen" schwarz', 'Schwarzes Shirt mit Logo-Print vorne.', 24.90, 4.5, 'Tausend Rosen Basic Tee.jpeg'),
-(1, 'T-Shirt "Tausend Rosen" weiß', 'Schwarzes Shirt mit Logo-Print vorne.', 24.90, 4.5, 'Tausend Rosen Basic Tee Weiss.jpeg'),
-(1, 'T-Shirt "Rosen Tour 2025" schwarz limited', 'Limitiertes Tour-Shirt, schwarz mit Tour-Print vorne.', 29.90, 4.8, 'Rosen Tour Shirt 2025.jpeg'),
-(1, 'T-Shirt "Tausend Rosen" vintage', 'Washed-Look, Unisex-Schnitt.', 27.50, 4.2, 'Vintage Logo Tee.jpeg'),
-(2, 'Classic Hoodie "Tausend Rosen" schwarz', 'Baumwoll-Hoodie mit gesticktem Logo.', 59.90, 4.7, 'Classic Hoodie schwarz.jpeg'),
-(2, 'Zip-Hoodie "Tausend Rosen" grau', 'Baumwoll-Hoodie Mit Reißverschluss, weicher Innenstoff.', 64.90, 4.4, 'Zip-Hoodie grau.jpeg'),
-(2, 'Oversize Hoodie "Tausend Rosen" schwarz', 'Boxy Fit, in Sand.', 69.00, 4.6, 'Oversize Hoodie.jpeg'),
-(3, 'Snapback Cap "Tausend Rosen" schwarz', 'Verstellbare Snapback mit Stick-Logo.', 19.90, 4.3, 'placeholder.jpg'),
-(3, 'Dad Cap "Tausend Rosen" Beige', 'Curved Brim, dezentes Logo.', 18.50, 4.0, 'placeholder.jpg'),
-(3, 'Beanie "Tausend Rosen" Winter', 'Warm gefüttert, einheitsgröße.', 16.90, 4.1, 'placeholder.jpg'),
-(4, 'Tote Bag "Tausend Rosen"', 'Stoffbeutel mit Print.', 12.90, 3.9, 'placeholder.jpg'),
-(4, 'Sticker-Set "Tausend Rosen"', '5 Aufkleber, glänzend.', 4.90, 4.5, 'placeholder.jpg'),
-(4, 'Tasse "Tausend Rosen"', 'Keramik, 330ml.', 11.90, 4.2, 'placeholder.jpg'),
-(4, 'CD Album "Das kleine Schwarze"', 'Das kleine Schwarze ist das Debütalbum der österreichischen Band Tausend Rosen aus Wien, das im November 2022 erschienen ist. Die fünfköpfige Band spielt eine sehr eigenständige, deutschsprachige Rock- und Popmusik, die live im Studio eingespielt wurde und sich nicht in gängige Schubladen stecken lässt.', 15.99, 5.0, 'product_25_1781274834.png');
+(2, 'T-Shirt "Tausend Rosen" schwarz', 'Schwarzes Shirt mit Logo-Print vorne.', 24.90, 4.5, 'Tausend Rosen Basic Tee.jpeg'),
+(2, 'T-Shirt "Tausend Rosen" weiß', 'Schwarzes Shirt mit Logo-Print vorne.', 24.90, 4.5, 'Tausend Rosen Basic Tee Weiss.jpeg'),
+(2, 'T-Shirt "Rosen Tour 2025" schwarz limited', 'Limitiertes Tour-Shirt, schwarz mit Tour-Print vorne.', 29.90, 4.8, 'Rosen Tour Shirt 2025.jpeg'),
+(2, 'T-Shirt "Tausend Rosen" vintage', 'Washed-Look, Unisex-Schnitt.', 27.50, 4.2, 'Vintage Logo Tee.jpeg'),
+(3, 'Classic Hoodie "Tausend Rosen" schwarz', 'Baumwoll-Hoodie mit gesticktem Logo.', 59.90, 4.7, 'Classic Hoodie schwarz.jpeg'),
+(3, 'Zip-Hoodie "Tausend Rosen" grau', 'Baumwoll-Hoodie Mit Reißverschluss, weicher Innenstoff.', 64.90, 4.4, 'Zip-Hoodie grau.jpeg'),
+(3, 'Oversize Hoodie "Tausend Rosen" schwarz', 'Boxy Fit, in Sand.', 69.00, 4.6, 'Oversize Hoodie.jpeg'),
+(4, 'Snapback Cap "Tausend Rosen" schwarz', 'Verstellbare Snapback mit Stick-Logo.', 19.90, 4.3, 'snapback Cap schwarz.jpeg'),
+(4, 'Dad Cap "Tausend Rosen" Beige', 'Curved Brim, dezentes Logo.', 18.50, 4.0, 'Dad Cap Beige.jpeg'),
+(4, 'Beanie "Tausend Rosen" Winter', 'Warm gefüttert, einheitsgröße.', 16.90, 4.1, 'Beanie Winter.jpeg'),
+(5, 'Tote Bag "Tausend Rosen"', 'Stoffbeutel mit Print.', 12.90, 3.9, 'Tote Bag Canvas.jpeg'),
+(5, 'Sticker-Set "Tausend Rosen"', '5 Aufkleber, glänzend.', 4.90, 4.5, 'Sticker-Set.jpeg'),
+(5, 'Tasse "Tausend Rosen"', 'Keramik, 330ml.', 11.90, 4.2, 'Tasse Logo.jpeg'),
+(1, 'CD Album "Das kleine Schwarze"', 'Das kleine Schwarze ist das Debütalbum der österreichischen Band Tausend Rosen aus Wien, das im November 2022 erschienen ist. Die fünfköpfige Band spielt eine sehr eigenständige, deutschsprachige Rock- und Popmusik, die live im Studio eingespielt wurde und sich nicht in gängige Schubladen stecken lässt.', 15.99, 5.0, 'product_25_1781274834.png');
 
 
 CREATE TABLE IF NOT EXISTS coupons (
