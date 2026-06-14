@@ -110,7 +110,7 @@ INSERT INTO products (category_id, name, description, price, rating, image) VALU
 (4, 'Tote Bag "Tausend Rosen"', 'Stoffbeutel mit Print.', 12.90, 3.9, 'placeholder.jpg'),
 (4, 'Sticker-Set "Tausend Rosen"', '5 Aufkleber, glänzend.', 4.90, 4.5, 'placeholder.jpg'),
 (4, 'Tasse "Tausend Rosen"', 'Keramik, 330ml.', 11.90, 4.2, 'placeholder.jpg'),
-(4, 'CD Album "Das kleine Schwarze"', 'Das kleine Schwarze ist das Debütalbum der österreichischen Band Tausend Rosen aus Wien, das im November 2022 erschienen ist. Die fünfköpfige Band spielt eine sehr eigenständige, deutschsprachige Rock- und Popmusik, die live im Studio eingespielt wurde und sich nicht in gängige Schubladen stecken lässt.', 15.99, 5.0, 'product_25_1781274834.png');
+(5, 'CD Album "Das kleine Schwarze"', 'Das kleine Schwarze ist das Debütalbum der österreichischen Band Tausend Rosen aus Wien, das im November 2022 erschienen ist. Die fünfköpfige Band spielt eine sehr eigenständige, deutschsprachige Rock- und Popmusik, die live im Studio eingespielt wurde und sich nicht in gängige Schubladen stecken lässt.', 15.99, 5.0, 'product_25_1781274834.png');
 
 
 CREATE TABLE IF NOT EXISTS coupons (
