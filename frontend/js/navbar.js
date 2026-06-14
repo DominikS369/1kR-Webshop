@@ -210,7 +210,7 @@ function renderFooter() {
                 </div>
             </div>
             <hr>
-            <p class="small text-muted mb-0">&copy; ${year} Tausend Rosen. Alle Rechte vorbehalten.</p>
+            <p class="small text-muted mb-0 text-center">&copy; ${year} Tausend Rosen. Alle Rechte vorbehalten.</p>
         </div>
     `;
     document.body.appendChild(footer);
