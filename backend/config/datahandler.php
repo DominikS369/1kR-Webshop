@@ -73,7 +73,7 @@ switch ($method) {
         $username = trim($input["username"] ?? "");
         $password = $input["password"] ?? "";
         $password2 = $input["password2"] ?? "";
-        $payment_info = trim($input["payment_info"] ?? "");
+        $payment_methods = $input["payment_methods"] ?? [];
 
         if (
             $firstname === "" || $lastname === "" || $address === "" ||
@@ -86,6 +86,19 @@ switch ($method) {
         if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
             sendJson(false, "Ungültige E-Mail-Adresse");
         }
+
+        if (!is_array($payment_methods) || count($payment_methods) === 0) {
+            sendJson(false, "Bitte mindestens eine Zahlungsart wählen");
+        }
+
+        $allowed = ["Auf Rechnung", "Kreditkarte", "PayPal"];
+        foreach ($payment_methods as $pm) {
+            if (!in_array($pm, $allowed)) {
+                sendJson(false, "Ungültige Zahlungsart");
+            }
+        }
+
+        $payment_info = implode(", ", $payment_methods);
 
         if ($password !== $password2) {
             sendJson(false, "Passwörter stimmen nicht überein");
@@ -128,10 +141,9 @@ switch ($method) {
         if ($stmt->execute()) {
             $newUserId = $conn->insert_id;
 
-            $defaultMethods = ["Auf Rechnung", "Kreditkarte", "PayPal"];
             $methodStmt = $conn->prepare("INSERT INTO user_payment_methods (user_id, method) VALUES (?, ?)");
-            foreach ($defaultMethods as $method) {
-                $methodStmt->bind_param("is", $newUserId, $method);
+            foreach ($payment_methods as $pm) {
+                $methodStmt->bind_param("is", $newUserId, $pm);
                 $methodStmt->execute();
             }
 

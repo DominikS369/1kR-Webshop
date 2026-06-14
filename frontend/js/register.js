@@ -55,6 +55,16 @@ form.addEventListener("submit", function (event) {
         return;
     }
 
+    const selectedMethods = [];
+    document.querySelectorAll(".payment-checkbox").forEach(cb => {
+        if (cb.checked) selectedMethods.push(cb.value);
+    });
+
+    if (selectedMethods.length === 0) {
+        showMessage("Bitte mindestens eine Zahlungsart wählen.");
+        return;
+    }
+
     const formData = {
         salutation: document.getElementById("salutation").value,
         firstname: firstname,
@@ -66,7 +76,7 @@ form.addEventListener("submit", function (event) {
         username: username,
         password: password,
         password2: password2,
-        payment_info: document.getElementById("payment_info").value.trim()
+        payment_methods: selectedMethods
     };
 
     console.log("Register attempt started");
