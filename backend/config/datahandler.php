@@ -1376,6 +1376,7 @@ switch ($method) {
         $discountType  = $_POST["discount_type"] ?? "";
         $discountValue = (float)($_POST["discount_value"] ?? 0);
         $expiresAt     = $_POST["expires_at"] ?? "";
+        $customCode    = strtoupper(trim($_POST["code"] ?? ""));
 
         if (!in_array($discountType, ["fixed", "percentage"])) {
             sendJson(false, "Ungültiger Rabatttyp");
@@ -1389,13 +1390,28 @@ switch ($method) {
 
         $db = new DBAccess();
         $conn = $db->getConnection();
-        do {
-            $code = strtoupper(substr(str_shuffle("ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"), 0, 5));
+
+        if ($customCode !== "") {
+            if (!preg_match('/^[A-Z0-9_-]+$/', $customCode)) {
+                sendJson(false, "Code darf nur Buchstaben, Zahlen, - und _ enthalten.");
+            }
             $check = $conn->prepare("SELECT id FROM coupons WHERE code = ?");
-            $check->bind_param("s", $code);
+            $check->bind_param("s", $customCode);
             $check->execute();
             $check->store_result();
-        } while ($check->num_rows > 0);
+            if ($check->num_rows > 0) {
+                sendJson(false, "Dieser Code existiert bereits.");
+            }
+            $code = $customCode;
+        } else {
+            do {
+                $code = strtoupper(substr(str_shuffle("ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"), 0, 5));
+                $check = $conn->prepare("SELECT id FROM coupons WHERE code = ?");
+                $check->bind_param("s", $code);
+                $check->execute();
+                $check->store_result();
+            } while ($check->num_rows > 0);
+        }
 
         $stmt = $conn->prepare("INSERT INTO coupons (code, discount_type, discount_value, expires_at) VALUES (?, ?, ?, ?)");
         $stmt->bind_param("ssds", $code, $discountType, $discountValue, $expiresAt);

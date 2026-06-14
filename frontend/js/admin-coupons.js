@@ -53,6 +53,7 @@ function loadCoupons(){
 }
 
 function createCoupon(){
+    const code          = document.getElementById("couponCode").value.trim();
     const discountType  = document.getElementById("discountType").value;
     const discountValue = document.getElementById("discountValue").value;
     const expiresAt     = document.getElementById("expiresAt").value;
@@ -65,12 +66,17 @@ function createCoupon(){
         showMessage("Bitte ein Ablaufdatum wählen.");
         return;
     }
+    if (code !== "" && !/^[A-Za-z0-9_-]+$/.test(code)) {
+        showMessage("Code darf nur Buchstaben, Zahlen, - und _ enthalten.");
+        return;
+    }
     $.ajax({
         url: API_BASE + "?method=createCoupon",
         method: "POST",
         dataType: "json",
         xhrFields: { withCredentials: true },
         data: {
+            code: code,
             discount_type: discountType,
             discount_value: discountValue,
             expires_at: expiresAt
@@ -81,6 +87,7 @@ function createCoupon(){
                 return;
             }
             showMessage(`Gutschein erstellt: ${data.code}`, "success");
+            document.getElementById("couponCode").value = "";
             loadCoupons();
         },
         error: function () {
