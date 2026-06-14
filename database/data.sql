@@ -63,6 +63,7 @@ CREATE TABLE IF NOT EXISTS orders (
     zip VARCHAR(10) NOT NULL,
     city VARCHAR(100) NOT NULL,
     payment_method VARCHAR(50) NOT NULL,
+    status VARCHAR(20) NOT NULL DEFAULT 'offen',
     FOREIGN KEY (user_id) REFERENCES users(id)
 );
 
