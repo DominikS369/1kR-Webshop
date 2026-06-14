@@ -166,7 +166,10 @@ function renderOrders(orders) {
                     <button class="accordion-button collapsed" type="button"
                             data-bs-toggle="collapse" data-bs-target="#${collapseId}">
                         <div class="d-flex justify-content-between w-100 me-3">
-                            <span>Bestellung #${o.id} – ${formatDate(o.order_date)}</span>
+                            <span>
+                                Bestellung #${o.id} – ${formatDate(o.order_date)}
+                                ${o.status === "storniert" ? `<span class="badge bg-danger ms-2">Storniert</span>` : ""}
+                            </span>
                             <span class="fw-bold">${o.total.toFixed(2)} € · ${o.payment_method}</span>
                         </div>
                     </button>
