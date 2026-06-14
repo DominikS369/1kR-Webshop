@@ -110,7 +110,8 @@ CREATE TABLE IF NOT EXISTS coupons (
     discount_type ENUM('percentage', 'fixed') NOT NULL,
     discount_value DECIMAL(10,2) NOT NULL,
     expires_at DATE NOT NULL,
-    is_active TINYINT(1) DEFAULT 1
+    is_active TINYINT(1) DEFAULT 1,
+    is_used TINYINT(1) DEFAULT 0
 );
 
 INSERT INTO coupons (code, discount_type, discount_value, expires_at) VALUES
