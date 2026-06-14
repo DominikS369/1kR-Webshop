@@ -1,22 +1,21 @@
 const IMG_BASE = "/1kR-Webshop/frontend/res/img/";
-
-const messageBox = document.getElementById("messageBox");
-const cartSummary = document.getElementById("cartSummary");
-const form = document.getElementById("checkoutForm");
 let appliedCoupon = null;
 
+
+
 function showMessage(message, type = "danger") {
-    messageBox.className = `alert alert-${type}`;
-    messageBox.textContent = message;
-    messageBox.classList.remove("d-none");
+    document.getElementById("messageBox").className = `alert alert-${type}`;
+    document.getElementById("messageBox").textContent = message;
+    document.getElementById("messageBox").classList.remove("d-none");
 }
 
 function clearMessage() {
-    messageBox.classList.add("d-none");
-    messageBox.textContent = "";
+    document.getElementById("messageBox").classList.add("d-none");
+    document.getElementById("messageBox").textContent = "";
 }
 
 function renderCartSummary(items, total) {
+    const cartSummary = document.getElementById("cartSummary");
     if (items.length === 0) {
         cartSummary.innerHTML = `<p class="text-muted">Dein Warenkorb ist leer.</p>`;
         return;
@@ -118,39 +117,48 @@ function loadUserData() {
 }
 
 function initCoupon(){
-    document.getElementById("code").addEventListener("blur", () => {
-        const code = document.getElementById("code").value.trim();
-        if (code === "") {
-            appliedCoupon = null;
-            updateTotal();
-            return;
+    const codeInput = document.getElementById("code");
+        if (!codeInput) return;
+        codeInput.addEventListener("blur", validateCouponManual);
         }
-        $.ajax({
-            url: `${API_BASE}?method=validateCoupon&code=${encodeURIComponent(code)}`,
-            method: "GET",
-            dataType: "json",
-            xhrFields: { withCredentials: true },
-            success: function (data) {
-                if (!data.success) {
-                    appliedCoupon = null;
-                    showMessage(data.message);
-                    updateTotal();
-                    return;
-                }
-                appliedCoupon = data.data;
-                showMessage("✓ Gutschein eingelöst!", "success");
+function validateCouponManual() {
+    const code = document.getElementById("code").value.trim();
+    console.log("Code:", code);
+    if (code === "") {
+        appliedCoupon = null;
+        updateTotal();
+        return;
+    }
+    $.ajax({
+        url: `${API_BASE}?method=validateCoupon&code=${encodeURIComponent(code)}`,
+        method: "GET",
+        dataType: "json",
+        xhrFields: { withCredentials: true },
+        success: function (data) {
+            if (!data.success) {
+                console.log("Response:", data);
+                appliedCoupon = null;
+                showMessage(data.message);
                 updateTotal();
-            },
-            error: function () {
-                showMessage("Fehler beim Prüfen des Gutscheins.");
+                return;
             }
-        });
+            appliedCoupon = data.data;
+            showMessage("Gutschein eingelöst!", "success");
+            updateTotal();
+        },
+        error: function () {
+            showMessage("Fehler beim Prüfen des Gutscheins.");
+        }
     });
 }
+
+
+
 
 function updateTotal() {
     const total = window._cartTotal;
     const totalBox = document.getElementById("cartTotal");
+    if (!totalBox) return;
 
     if (!appliedCoupon) {
         totalBox.textContent = `${total.toFixed(2)} €`;
@@ -172,74 +180,81 @@ function updateTotal() {
         <span class="fw-bold ms-2">${newTotal.toFixed(2)} €</span>
     `;
 }
+document.addEventListener("DOMContentLoaded", function () {
+    const form = document.getElementById("checkoutForm");
+    if (!form) return;
 
-form.addEventListener("submit", function (event) {
-    event.preventDefault();
-    clearMessage();
+    document.getElementById("couponBtn").addEventListener("click", validateCouponManual);
 
-    if (!form.checkValidity()) {
-        form.reportValidity();
-        return;
-    }
+    form.addEventListener("submit", function (event) {
+        event.preventDefault();
+        clearMessage();
 
-    const firstname = document.getElementById("firstname").value.trim();
-    const lastname = document.getElementById("lastname").value.trim();
-    const address = document.getElementById("address").value.trim();
-    const zip = document.getElementById("zip").value.trim();
-    const city = document.getElementById("city").value.trim();
-    const paymentMethod = document.getElementById("paymentMethod").value;
-
-    if (paymentMethod === "") {
-        showMessage("Bitte eine Zahlungsart wählen.");
-        return;
-    }
-
-    if (!/^\d{4,5}$/.test(zip)) {
-        showMessage("Bitte eine gültige PLZ eingeben.");
-        return;
-    }
-
-    if (!/^[A-Za-zÄÖÜäöüß\s-]+$/.test(firstname)) {
-        showMessage("Der Vorname enthält ungültige Zeichen.");
-        return;
-    }
-
-    if (!/^[A-Za-zÄÖÜäöüß\s-]+$/.test(lastname)) {
-        showMessage("Der Nachname enthält ungültige Zeichen.");
-        return;
-    }
-
-    $.ajax({
-        url: `${API_BASE}?method=placeOrder`,
-        method: "POST",
-        contentType: "application/json",
-        dataType: "json",
-        xhrFields: { withCredentials: true },
-        data: JSON.stringify({
-            firstname: firstname,
-            lastname: lastname,
-            address: address,
-            zip: zip,
-            city: city,
-            payment_method: paymentMethod
-        }),
-        success: function (data) {
-            if (!data.success) {
-                showMessage(data.message);
-                return;
-            }
-            showMessage("Bestellung erfolgreich aufgegeben! Du wirst weitergeleitet ...", "success");
-            if (typeof updateCartCount === "function") updateCartCount();
-            setTimeout(() => {
-                window.location.href = "index.html";
-            }, 2000);
-        },
-        error: function () {
-            showMessage("Bestellung fehlgeschlagen.");
+        if (!form.checkValidity()) {
+            form.reportValidity();
+            return;
         }
-    });
-});
 
-loadUserData();
-loadPaymentMethods();
-loadCart();
+        const firstname = document.getElementById("firstname").value.trim();
+        const lastname = document.getElementById("lastname").value.trim();
+        const address = document.getElementById("address").value.trim();
+        const zip = document.getElementById("zip").value.trim();
+        const city = document.getElementById("city").value.trim();
+        const paymentMethod = document.getElementById("paymentMethod").value;
+
+        if (paymentMethod === "") {
+            showMessage("Bitte eine Zahlungsart wählen.");
+            return;
+        }
+
+        if (!/^\d{4,5}$/.test(zip)) {
+            showMessage("Bitte eine gültige PLZ eingeben.");
+            return;
+        }
+
+        if (!/^[A-Za-zÄÖÜäöüß\s-]+$/.test(firstname)) {
+            showMessage("Der Vorname enthält ungültige Zeichen.");
+            return;
+        }
+
+        if (!/^[A-Za-zÄÖÜäöüß\s-]+$/.test(lastname)) {
+            showMessage("Der Nachname enthält ungültige Zeichen.");
+            return;
+        }
+
+        $.ajax({
+            url: `${API_BASE}?method=placeOrder`,
+            method: "POST",
+            contentType: "application/json",
+            dataType: "json",
+            xhrFields: {withCredentials: true},
+            data: JSON.stringify({
+                firstname: firstname,
+                lastname: lastname,
+                address: address,
+                zip: zip,
+                city: city,
+                payment_method: paymentMethod,
+                coupon_code: appliedCoupon ? appliedCoupon.code : ""
+            }),
+            success: function (data) {
+                if (!data.success) {
+                    showMessage(data.message);
+                    return;
+                }
+                showMessage("Bestellung erfolgreich aufgegeben! Du wirst weitergeleitet ...", "success");
+                if (typeof updateCartCount === "function") updateCartCount();
+                setTimeout(() => {
+                    window.location.href = "index.html";
+                }, 2000);
+            },
+            error: function () {
+                showMessage("Bestellung fehlgeschlagen.");
+            }
+        });
+    });
+
+    loadUserData();
+    loadPaymentMethods();
+    loadCart();
+});

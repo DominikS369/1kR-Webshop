@@ -784,7 +784,7 @@ switch ($method) {
         $conn = $db->getConnection();
 
         $stmt = $conn->prepare("
-        SELECT id, code, discount_type, discount_value, expires_at, is_active
+        SELECT id, code, discount_type, discount_value, expires_at, is_active, is_used
         FROM coupons
         WHERE code = ?
     ");
@@ -796,6 +796,9 @@ switch ($method) {
             sendJson(false, "Ungültiger Gutscheincode");
         }
         $coupon = $result->fetch_assoc();
+        if ((int)$coupon["is_used"] === 1) {
+            sendJson(false, "Gutschein wurde bereits eingelöst");
+        }
         if ((int)$coupon["is_active"] !== 1) {
             sendJson(false, "Gutschein ist nicht mehr gültig");
         }
@@ -870,11 +873,17 @@ switch ($method) {
             $items[] = $row;
         }
         $couponCode = trim($input["coupon_code"] ?? "");
+        $coupon = null;
         if ($couponCode !== "") {
-            $couponCheck = $conn->prepare("SELECT discount_type, discount_value FROM coupons WHERE code = ? AND is_active = 1 AND expires_at >= CURDATE()");
-            $couponCheck->bind_param("s", $couponCode);
-            $couponCheck->execute();
-            $coupon = $couponCheck->get_result()->fetch_assoc();
+            $couponStmt = $conn->prepare("
+            SELECT * FROM coupons 
+            WHERE code = ? 
+              AND is_used = 0 
+              AND expires_at >= CURDATE()
+        ");
+            $couponStmt->bind_param("s", $couponCode);
+            $couponStmt->execute();
+            $coupon = $couponStmt->get_result()->fetch_assoc();
 
             if ($coupon) {
                 if ($coupon["discount_type"] === "percentage") {
@@ -885,6 +894,7 @@ switch ($method) {
                 $total = max(0, round($total, 2));
             }
         }
+
 
         $orderStmt = $conn->prepare("
             INSERT INTO orders (user_id, total, firstname, lastname, address, zip, city, payment_method)
@@ -908,13 +918,11 @@ switch ($method) {
         $clearStmt->bind_param("i", $userId);
         $clearStmt->execute();
 
-        $couponCode = trim($input["coupon_code"] ?? "");
-        if ($couponCode !== "") {
-            $couponStmt = $conn->prepare("UPDATE coupons SET is_active = 0 WHERE code = ?");
-            $couponStmt->bind_param("s", $couponCode);
-            $couponStmt->execute();
+        if (!empty($coupon)) {
+            $markUsed = $conn->prepare("UPDATE coupons SET is_used = 1 WHERE code = ?");
+            $markUsed->bind_param("s", $couponCode);
+            $markUsed->execute();
         }
-
         sendJson(true, "Bestellung erfolgreich aufgegeben");
 
 
@@ -1324,6 +1332,66 @@ switch ($method) {
         $stmt->execute();
 
         sendJson(true, "Produkt aus Bestellung entfernt.");
+
+
+    case "getCoupons":
+        requireMethod("GET");
+        startSessionIfNeeded();
+
+        if (empty($_SESSION["user_id"]) || (int)($_SESSION["is_admin"] ?? 0) !== 1) {
+            sendJson(false, "Keine Berechtigung");
+        }
+        $db = new DBAccess();
+        $conn = $db->getConnection();
+
+        $stmt = $conn->prepare("SELECT id, code, discount_type, discount_value, expires_at, is_active, is_used  FROM coupons ORDER BY id DESC");
+        $stmt->execute();
+        $result = $stmt->get_result();
+
+        $coupons = [];
+        while ($row = $result->fetch_assoc()) {
+            $coupons[] = $row;
+        }
+        sendJson(true, "OK", ["coupons" => $coupons]);
+
+    case "createCoupon":
+        requireMethod("POST");
+        startSessionIfNeeded();
+
+        if (empty($_SESSION["user_id"]) || (int)($_SESSION["is_admin"] ?? 0) !== 1) {
+            sendJson(false, "Keine Berechtigung");
+        }
+        $discountType  = $_POST["discount_type"] ?? "";
+        $discountValue = (float)($_POST["discount_value"] ?? 0);
+        $expiresAt     = $_POST["expires_at"] ?? "";
+
+        if (!in_array($discountType, ["fixed", "percentage"])) {
+            sendJson(false, "Ungültiger Rabatttyp");
+        }
+        if ($discountValue <= 0) {
+            sendJson(false, "Ungültiger Rabattwert");
+        }
+        if (empty($expiresAt)) {
+            sendJson(false, "Ablaufdatum fehlt");
+        }
+
+        $db = new DBAccess();
+        $conn = $db->getConnection();
+        do {
+            $code = strtoupper(substr(str_shuffle("ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"), 0, 5));
+            $check = $conn->prepare("SELECT id FROM coupons WHERE code = ?");
+            $check->bind_param("s", $code);
+            $check->execute();
+            $check->store_result();
+        } while ($check->num_rows > 0);
+
+        $stmt = $conn->prepare("INSERT INTO coupons (code, discount_type, discount_value, expires_at) VALUES (?, ?, ?, ?)");
+        $stmt->bind_param("ssds", $code, $discountType, $discountValue, $expiresAt);
+        $stmt->execute();
+
+        sendJson(true, "Gutschein erstellt.", ["code" => $code]);
+
+
     default:
         sendJson(false, "Unknown method: '" . $method . "'. GET params: " . json_encode($_GET));
 }
