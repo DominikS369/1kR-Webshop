@@ -1327,7 +1327,7 @@ switch ($method) {
         $stmt->bind_param("i", $itemId);
         $stmt->execute();
 
-        $stmt = $conn->prepare("UPDATE orders SET total = (SELECT SUM(price * quantity) FROM order_items WHERE order_id = ?) WHERE id = ?");
+        $stmt = $conn->prepare("UPDATE orders SET total = (SELECT COALESCE(SUM(price * quantity), 0) FROM order_items WHERE order_id = ?) WHERE id = ?");
         $stmt->bind_param("ii", $item["order_id"], $item["order_id"]);
         $stmt->execute();
 
