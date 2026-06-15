@@ -70,6 +70,10 @@ function showDetails(userId) {
 
     document.getElementById(`row-${userId}`).insertAdjacentElement("afterend", detailRow);
 
+    loadUserOrders(userId);
+}
+
+function loadUserOrders(userId) {
     $.ajax({
         url: API_BASE + "?method=getUserOrders&user_id=" + userId,
         method: "GET",
@@ -90,6 +94,7 @@ function showDetails(userId) {
                         <th>Zahlung</th>
                         <th>Total</th>
                         <th>Positionen</th>
+                        <th>Aktion</th>
                     </tr>
                 </thead><tbody>`;
 
@@ -105,6 +110,11 @@ function showDetails(userId) {
                         <button class="btn btn-sm btn-outline-secondary" onclick="toggleOrderItems(${o.id}, ${userId})">
                             <i class="bi bi-list"></i>
                         </button>
+                    </td>
+                    <td>
+                        ${o.status === "storniert"
+                            ? `<span class="badge bg-danger">Storniert</span>`
+                            : `<button class="btn btn-sm btn-outline-danger" onclick="cancelOrder(${o.id}, ${userId})">Stornieren</button>`}
                     </td>
                 </tr>
                 <tr id="items-${o.id}"></tr>`;
@@ -134,11 +144,11 @@ function toggleOrderItems(orderId, userId) {
         xhrFields: { withCredentials: true },
         success: function (data) {
             if (!data.success || data.items.length === 0) {
-                row.innerHTML = `<td colspan="6" class="text-muted ps-4">Keine Positionen.</td>`;
+                row.innerHTML = `<td colspan="7" class="text-muted ps-4">Keine Positionen.</td>`;
                 return;
             }
 
-            let html = `<td colspan="6" class="p-0">
+            let html = `<td colspan="7" class="p-0">
                 <table class="table table-sm mb-0 table-bordered">
                     <thead class="table-secondary">
                         <tr>
@@ -171,7 +181,30 @@ function toggleOrderItems(orderId, userId) {
             row.innerHTML = html;
         },
         error: function () {
-            row.innerHTML = `<td colspan="6" class="text-danger">Fehler beim Laden.</td>`;
+            row.innerHTML = `<td colspan="7" class="text-danger">Fehler beim Laden.</td>`;
+        }
+    });
+}
+
+function cancelOrder(orderId, userId) {
+    if (!confirm(`Bestellung #${orderId} wirklich stornieren?`)) return;
+
+    $.ajax({
+        url: API_BASE + "?method=cancelOrder",
+        method: "POST",
+        dataType: "json",
+        xhrFields: { withCredentials: true },
+        data: { order_id: orderId },
+        success: function (data) {
+            if (!data.success) {
+                showMessage(data.message);
+                return;
+            }
+            showMessage("Bestellung storniert.", "success");
+            loadUserOrders(userId);
+        },
+        error: function () {
+            showMessage("Fehler beim Stornieren der Bestellung.");
         }
     });
 }

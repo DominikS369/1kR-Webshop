@@ -1052,7 +1052,7 @@ switch ($method) {
         $conn = $db->getConnection();
 
         $stmt = $conn->prepare("
-            SELECT id, order_date, total, payment_method
+            SELECT id, order_date, total, payment_method, status
             FROM orders
             WHERE user_id = ?
             ORDER BY order_date DESC
@@ -1233,7 +1233,7 @@ switch ($method) {
         $db = new DBAccess();
         $conn = $db->getConnection();
 
-        $stmt = $conn->prepare("SELECT id, order_date, total, firstname, lastname, address, zip, city, payment_method FROM orders WHERE user_id = ? ORDER BY order_date DESC");
+        $stmt = $conn->prepare("SELECT id, order_date, total, firstname, lastname, address, zip, city, payment_method, status FROM orders WHERE user_id = ? ORDER BY order_date DESC");
         $stmt->bind_param("i", $userId);
         $stmt->execute();
         $result = $stmt->get_result();
@@ -1345,6 +1345,40 @@ switch ($method) {
 
         sendJson(true, "Produkt aus Bestellung entfernt.");
 
+    case "cancelOrder":
+        requireMethod("POST");
+        startSessionIfNeeded();
+
+        if (empty($_SESSION["user_id"]) || (int)($_SESSION["is_admin"] ?? 0) !== 1) {
+            sendJson(false, "Keine Berechtigung");
+        }
+
+        $orderId = (int)($_POST["order_id"] ?? 0);
+        if ($orderId <= 0) {
+            sendJson(false, "Ungültige Order ID");
+        }
+
+        $db = new DBAccess();
+        $conn = $db->getConnection();
+
+        $check = $conn->prepare("SELECT status FROM orders WHERE id = ?");
+        $check->bind_param("i", $orderId);
+        $check->execute();
+        $existing = $check->get_result()->fetch_assoc();
+
+        if (!$existing) {
+            sendJson(false, "Bestellung nicht gefunden.");
+        }
+        if ($existing["status"] === "storniert") {
+            sendJson(false, "Bestellung ist bereits storniert.");
+        }
+
+        $stmt = $conn->prepare("UPDATE orders SET status = 'storniert' WHERE id = ?");
+        $stmt->bind_param("i", $orderId);
+        $stmt->execute();
+
+        sendJson(true, "Bestellung storniert.");
+
 
     case "getCoupons":
         requireMethod("GET");
@@ -1376,6 +1410,7 @@ switch ($method) {
         $discountType  = $_POST["discount_type"] ?? "";
         $discountValue = (float)($_POST["discount_value"] ?? 0);
         $expiresAt     = $_POST["expires_at"] ?? "";
+        $customCode    = strtoupper(trim($_POST["code"] ?? ""));
 
         if (!in_array($discountType, ["fixed", "percentage"])) {
             sendJson(false, "Ungültiger Rabatttyp");
@@ -1389,13 +1424,28 @@ switch ($method) {
 
         $db = new DBAccess();
         $conn = $db->getConnection();
-        do {
-            $code = strtoupper(substr(str_shuffle("ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"), 0, 5));
+
+        if ($customCode !== "") {
+            if (!preg_match('/^[A-Z0-9_-]+$/', $customCode)) {
+                sendJson(false, "Code darf nur Buchstaben, Zahlen, - und _ enthalten.");
+            }
             $check = $conn->prepare("SELECT id FROM coupons WHERE code = ?");
-            $check->bind_param("s", $code);
+            $check->bind_param("s", $customCode);
             $check->execute();
             $check->store_result();
-        } while ($check->num_rows > 0);
+            if ($check->num_rows > 0) {
+                sendJson(false, "Dieser Code existiert bereits.");
+            }
+            $code = $customCode;
+        } else {
+            do {
+                $code = strtoupper(substr(str_shuffle("ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"), 0, 5));
+                $check = $conn->prepare("SELECT id FROM coupons WHERE code = ?");
+                $check->bind_param("s", $code);
+                $check->execute();
+                $check->store_result();
+            } while ($check->num_rows > 0);
+        }
 
         $stmt = $conn->prepare("INSERT INTO coupons (code, discount_type, discount_value, expires_at) VALUES (?, ?, ?, ?)");
         $stmt->bind_param("ssds", $code, $discountType, $discountValue, $expiresAt);

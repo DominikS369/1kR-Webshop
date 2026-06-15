@@ -39,6 +39,7 @@ function drawNavbar(nav, user) {
         leftLinks = `
             <a href="index.html">Home</a>
             <a href="products.html">Produkte</a>
+            <a href="about.html">About</a>
         `;
         rightLinks = `
             <a href="login.html">Login</a>
@@ -61,6 +62,7 @@ function drawNavbar(nav, user) {
             <a href="index.html">Home</a>
             <a href="products.html">Produkte</a>
             <a href="account.html">Mein Konto</a>
+            <a href="about.html">About</a>
         `;
         rightLinks = `
             <span>Eingeloggt als: ${user.username}</span>
@@ -175,4 +177,46 @@ function updateCartCount() {
     });
 }
 
-document.addEventListener("DOMContentLoaded", renderNavbar);
+function renderFooter() {
+    if (document.getElementById("mainFooter")) return;
+
+    const year = new Date().getFullYear();
+    const footer = document.createElement("footer");
+    footer.id = "mainFooter";
+    footer.className = "site-footer mt-5";
+    footer.innerHTML = `
+        <div class="page-container py-4">
+            <div class="row gy-3">
+                <div class="col-md-6">
+                    <h6 class="text-uppercase"><a href="impressum.html">Impressum</a></h6>
+                    <p class="mb-1"><a href="mailto:office@tausendrosen.com">office@tausendrosen.com</a></p>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <h6 class="text-uppercase">Folge uns</h6>
+                    <p class="mb-0 d-flex flex-wrap gap-3 justify-content-md-end">
+                        <a href="https://www.tausendrosen.com" target="_blank" rel="noopener">
+                            <i class="bi bi-globe me-1"></i>tausendrosen.com
+                        </a>
+                        <a href="https://open.spotify.com/intl-de/artist/0gwnmTDRvl6WjxDCsJ6evd" target="_blank" rel="noopener">
+                            <i class="bi bi-spotify me-1"></i>Spotify
+                        </a>
+                        <a href="https://www.instagram.com/tausendrosenmusik/" target="_blank" rel="noopener">
+                            <i class="bi bi-instagram me-1"></i>Instagram
+                        </a>
+                        <a href="https://www.facebook.com/tausendrosenmusik/" target="_blank" rel="noopener">
+                            <i class="bi bi-facebook me-1"></i>Facebook
+                        </a>
+                    </p>
+                </div>
+            </div>
+            <hr>
+            <p class="small text-muted mb-0 text-center">&copy; ${year} Tausend Rosen. Alle Rechte vorbehalten.</p>
+        </div>
+    `;
+    document.body.appendChild(footer);
+}
+
+document.addEventListener("DOMContentLoaded", function () {
+    renderNavbar();
+    renderFooter();
+});

@@ -133,3 +133,25 @@ a:hover {
 #productGrid {
   justify-content: center;
 }
+
+/* Footer */
+.site-footer {
+  background-color: #fff;
+  border-top: 1px solid var(--tr-border);
+  text-align: left;
+}
+
+.site-footer h6 {
+  font-size: 0.8rem;
+  letter-spacing: 0.05em;
+  color: var(--tr-gray);
+  margin-bottom: 0.75rem;
+}
+
+.site-footer a {
+  text-decoration: none;
+}
+
+.site-footer a:hover {
+  color: var(--tr-rose);
+}

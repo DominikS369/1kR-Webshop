@@ -1,5 +1,4 @@
 -- Webshop_1kR – Schema und Testdaten
--- Sprint 2 (Produkte, Kategorien, Cart wird in #29 ergänzt)
 
 CREATE TABLE IF NOT EXISTS users (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -16,6 +15,15 @@ CREATE TABLE IF NOT EXISTS users (
     is_admin TINYINT(1) DEFAULT 0,
     is_active TINYINT(1) DEFAULT 1
 );
+
+-- PW: tausendrosen
+
+INSERT INTO users (id, salutation, firstname, lastname, address, zip, city, email, username, password, payment_info, is_admin, is_active) VALUES
+(1, 'Herr', 'Dominik', 'Sommer', 'Spechtgasse 72', '2340', 'Mödling', 'wi24b118@technikum-wien.at', 'Dom', '$2y$10$23MfFcgEKBosPD2sh6rqJ.Pqa.YMr/2nQE8cnuqfFNsYWnvr9TODG', '', 0, 1),
+(2, 'Herr', 'Mika', 'Stermann', 'Hochstädtplatz 4', '1220', 'Wien', 'mika@tausendrosen.at', 'Mika', '$2y$10$OL44P5vs4oA5NZKSMwKjx.FJb0ZlxEtDaxeaaSVCLNC3ZbgOIPcoC', '', 0, 1),
+(3, 'Frau', 'Aylin', 'Karacsonyi', 'Dresdner Straße 9', '1220', 'Wien', 'aylin@tausendrosen.at', 'Aylin', '$2y$10$7WFRpme/j0FyTEZ8GSaRcOrc714l1Ueeon1CQddyphuVLWrryYXoC', '', 0, 1),
+(4, 'Herr', 'Helmuth', 'Lammer', 'Jägerstraße 5', '1220', 'Wien', 'lammer@tausendrosen.at', 'Admin', '$2y$10$iBnQNS5oo03uiCB3slRGhe6IBsZ3OeffDFURoJd3lam4L3wiHZh1S', '', 1, 1);
+
 
 CREATE TABLE IF NOT EXISTS categories (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -55,6 +63,7 @@ CREATE TABLE IF NOT EXISTS orders (
     zip VARCHAR(10) NOT NULL,
     city VARCHAR(100) NOT NULL,
     payment_method VARCHAR(50) NOT NULL,
+    status VARCHAR(20) NOT NULL DEFAULT 'offen',
     FOREIGN KEY (user_id) REFERENCES users(id)
 );
 
@@ -114,17 +123,12 @@ CREATE TABLE IF NOT EXISTS coupons (
     is_used TINYINT(1) DEFAULT 0
 );
 
+
 INSERT INTO coupons (code, discount_type, discount_value, expires_at) VALUES
 ('SOMMER10', 'fixed', 10.00, '2026-12-31'),
 ('WELCOME5', 'fixed', 5.00, '2026-12-31'),
 ('SAVE20', 'percentage', 20.00, '2026-12-31');
 
-ALTER TABLE `coupons` ADD COLUMN `is_used` TINYINT(1) DEFAULT 0;
 
---PW: tausendrosen
 
-INSERT INTO users (id, salutation, firstname, lastname, address, zip, city, email, username, password, payment_info, is_admin, is_active) VALUES
-(1, 'Herr', 'Dominik', 'Sommer', 'Spechtgasse 72', '2340', 'Mödling', 'wi24b118@technikum-wien.at', 'Dom', '$2y$10$23MfFcgEKBosPD2sh6rqJ.Pqa.YMr/2nQE8cnuqfFNsYWnvr9TODG', '', 0, 1),
-(2, 'Herr', 'Mika', 'Stermann', 'Hochstädtplatz 4', '1220', 'Wien', 'mika@tausendrosen.at', 'Mika', '$2y$10$OL44P5vs4oA5NZKSMwKjx.FJb0ZlxEtDaxeaaSVCLNC3ZbgOIPcoC', '', 0, 1),
-(3, 'Frau', 'Aylin', 'Karacsonyi', 'Dresdner Straße 9', '1220', 'Wien', 'aylin@tausendrosen.at', 'Aylin', '$2y$10$7WFRpme/j0FyTEZ8GSaRcOrc714l1Ueeon1CQddyphuVLWrryYXoC', '', 0, 1),
-(4, 'Divers', 'Helmuth', 'Lammer', 'Jägerstraße 5', '1220', 'Wien', 'lammer@tausendrosen.at', 'Admin', '$2y$10$iBnQNS5oo03uiCB3slRGhe6IBsZ3OeffDFURoJd3lam4L3wiHZh1S', '', 1, 1);
+
