@@ -104,12 +104,12 @@ INSERT INTO products (category_id, name, description, price, rating, image) VALU
 (3, 'Classic Hoodie schwarz', 'Schwerer Baumwoll-Hoodie mit gesticktem Logo.', 59.90, 4.7, 'Classic Hoodie schwarz.jpeg'),
 (3, 'Zip-Hoodie grau', 'Mit Reißverschluss, weicher Innenstoff.', 64.90, 4.4, 'Zip-Hoodie grau.jpeg'),
 (3, 'Oversize Hoodie', 'Boxy Fit, in Sand.', 69.00, 4.6, 'Oversize Hoodie.jpeg'),
-(4, 'Snapback Cap schwarz', 'Verstellbare Snapback mit Stick-Logo.', 19.90, 4.3, 'placeholder.jpg'),
-(4, 'Dad Cap Beige', 'Curved Brim, dezentes Logo.', 18.50, 4.0, 'placeholder.jpg'),
-(4, 'Beanie Winter', 'Warm gefüttert, einheitsgröße.', 16.90, 4.1, 'placeholder.jpg'),
-(5, 'Tote Bag Canvas', 'Stoffbeutel mit Print.', 12.90, 3.9, 'placeholder.jpg'),
-(5, 'Sticker-Set', '5 Aufkleber, glänzend.', 4.90, 4.5, 'placeholder.jpg'),
-(5, 'Tasse Logo', 'Keramik, 330ml.', 11.90, 4.2, 'placeholder.jpg'),
+(4, 'Snapback Cap "Tausend Rosen" schwarz', 'Verstellbare Snapback mit Stick-Logo.', 19.90, 4.3, 'snapback Cap schwarz.jpeg'),
+(4, 'Dad Cap "Tausend Rosen" Beige', 'Curved Brim, dezentes Logo.', 18.50, 4.0, 'Dad Cap Beige.jpeg'),
+(4, 'Beanie "Tausend Rosen" Winter', 'Warm gefüttert, einheitsgröße.', 16.90, 4.1, 'Beanie Winter.jpeg'),
+(5, 'Tote Bag "Tausend Rosen"', 'Stoffbeutel mit Print.', 12.90, 3.9, 'Tote Bag Canvas.jpeg'),
+(5, 'Sticker-Set "Tausend Rosen"', '5 Aufkleber, glänzend.', 4.90, 4.5, 'Sticker-Set.jpeg'),
+(5, 'Tasse "Tausend Rosen"', 'Keramik, 330ml.', 11.90, 4.2, 'Tasse Logo.jpeg'),
 (1, 'CD Album "Das kleine Schwarze"', 'Das kleine Schwarze ist das Debütalbum der österreichischen Band Tausend Rosen aus Wien, das im November 2022 erschienen ist. Die fünfköpfige Band spielt eine sehr eigenständige, deutschsprachige Rock- und Popmusik, die live im Studio eingespielt wurde und sich nicht in gängige Schubladen stecken lässt.', 15.99, 5.0, 'product_25_1781274834.png');
 
 
