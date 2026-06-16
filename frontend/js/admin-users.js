@@ -62,7 +62,7 @@ function showDetails(userId) {
     detailRow.innerHTML = `
         <td colspan="6" class="bg-light">
             <p><strong>Adresse:</strong> ${u.address ?? "-"}, ${u.zip ?? "-"} ${u.city ?? "-"}</p>
-            <p><strong>Zahlungsart:</strong> ${u.payment_info ?? "-"}</p>
+            <p><strong>Zahlungsart:</strong> ${u.payment_methods ?? "-"}</p>
             <p><strong>Rolle:</strong> ${u.is_admin == 1 ? "Admin" : "Kunde"}</p>
             <h6>Bestellungen</h6>
             <div id="orderList-${userId}"></div>

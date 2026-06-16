@@ -77,6 +77,7 @@ document.getElementById("editBtn").addEventListener("click", () => {
 });
 
 document.getElementById("cancelBtn").addEventListener("click", () => {
+    messageBox.classList.add("d-none");
     document.getElementById("accountForm").classList.add("d-none");
     document.getElementById("accountDetails").classList.remove("d-none");
     document.getElementById("editBtn").classList.remove("d-none");
@@ -85,8 +86,11 @@ document.getElementById("cancelBtn").addEventListener("click", () => {
 document.getElementById("addPaymentBtn").addEventListener("click", () => {
     const val = document.getElementById("form-new-payment").value.trim();
     if (val === "") return;
+    if (currentPaymentMethods.includes(val)) {
+        showMessage("Diese Zahlungsmethode ist bereits hinzugefügt.", "warning");
+        return;
+    }
     currentPaymentMethods.push(val);
-    document.getElementById("form-new-payment").value = "";
     renderPaymentList();
 });
 
