@@ -138,5 +138,22 @@ INSERT INTO coupons (code, discount_type, discount_value, expires_at) VALUES
 ('SAVE20', 'percentage', 20.00, '2026-12-31');
 
 
+-- Beispielbestellung von Dom (User 1): 1 CD, 2 verschiedene T-Shirts, 2 Sticker-Sets
+-- Gutschein SOMMER10 (-10,00 €) eingelöst. Zwischensumme 80,59 € -> Gesamt 70,59 €
+INSERT INTO orders (id, user_id, order_date, total, firstname, lastname, address, zip, city, payment_method, status) VALUES
+(1, 1, '2026-06-16 12:00:00', 70.59, 'Dominik', 'Sommer', 'Spechtgasse 72', '2340', 'Mödling', 'Kreditkarte', 'offen');
+
+INSERT INTO order_items (order_id, product_id, quantity, price) VALUES
+(1, 13, 1, 15.99),   -- CD Album "Das kleine Schwarze"
+(1, 1, 1, 24.90),    -- Tausend Rosen Basic Tee
+(1, 2, 1, 29.90),    -- Rosen Tour Shirt 2025
+(1, 11, 2, 4.90);    -- Sticker-Set "Tausend Rosen" (2x)
+
+UPDATE coupons SET is_used = 1 WHERE code = 'SOMMER10';
+
+INSERT INTO invoices (id, order_id, invoice_number) VALUES
+(1, 1, 'R-2026-0001');
+
+
 
 
