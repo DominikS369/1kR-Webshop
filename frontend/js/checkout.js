@@ -1,3 +1,5 @@
+//checkout.js lässt User Bestellsummary einsehen, Formualar mit Lieferadresse und Zahloption auszfüllen, Coupon einlösen, aktuellen Preis einsehen und bestllung tätigen
+
 const IMG_BASE = "/1kR-Webshop/frontend/res/img/";
 let appliedCoupon = null;
 

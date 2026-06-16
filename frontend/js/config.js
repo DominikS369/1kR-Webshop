@@ -1,3 +1,4 @@
+// config.js definiert die API_BASE für die AJAX-Calls
 const API_BASE = (function() {
 
     const origin = window.location.origin;

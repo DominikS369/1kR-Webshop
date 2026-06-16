@@ -1,4 +1,4 @@
-<?php
+<?php // Jeder API-Case erzeugt new DBAccess() und holt sich mit getConnection() die mysqli-Verbindung. dbaccess.php ist somit die Verbindun verbindungsklasse zur DB und datahandler
 
 require_once __DIR__ . "/dbconfig.php";
 

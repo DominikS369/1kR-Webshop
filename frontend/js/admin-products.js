@@ -1,3 +1,5 @@
+//admin-products.js lässt Admin im CRUD Prinzip alle Produkte verwalten, als auch Bilder und Beschreibungern hinzuzufügen
+
 const IMG_BASE = "/1kR-Webshop/frontend/res/img/";
 
 const listBox = document.getElementById("adminProductList");
@@ -98,7 +100,7 @@ function saveProduct(payload, btn) {
     btn.disabled = true;
 
     $.ajax({
-        url: `${API_BASE}?method=updateProduct`,
+        url: `${API_BASE}?method=updateProduct`, //API_BASE wird in config.js definiert
         method: "POST",
         contentType: "application/json",
         dataType: "json",

@@ -1,3 +1,5 @@
+//login.js lässt den Gast sich in das Formular Login eintragen, alles wird über AJAX Call wieder geprüft
+
 const LOGIN_URL = API_BASE;
 
 const form = document.getElementById("loginForm");

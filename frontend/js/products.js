@@ -1,3 +1,6 @@
+//products.js enhält Produkte, Kategorien, Preise, Bewertungen, Beschreibung und eine Live-Suche
+
+
 const IMG_BASE = "/1kR-Webshop/frontend/res/img/";
 
 const grid = document.getElementById("productGrid");

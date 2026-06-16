@@ -1,4 +1,4 @@
-<?php
+<?php  //datahandler.php nimmt alle Requests entgegen und entscheidet über Swicht Cases welcher Code Block benötigt wird. Außerdem werden hier viele Authentifiezierungen und Validierungen durchgeführt.
 
 header("Access-Control-Allow-Origin: *");
 header("Access-Control-Allow-Methods: GET, POST, OPTIONS");

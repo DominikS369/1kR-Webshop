@@ -1,4 +1,4 @@
-// API_BASE wird aus config.js geladen
+//navbar.js ist dynamisch und zeigt je nach Benutzerstatus verschiedene Elemente an, produkte können durch setupCartDropZone() in Navbar ge drag&dropped werden und landen im Warenkorb
 
 function renderNavbar() {
     const nav = document.getElementById("mainNavbar");

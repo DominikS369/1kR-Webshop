@@ -1,3 +1,5 @@
+//cart.js lässt User den Warenkorb Inhalt anzeigen, bearbeiten und löschen
+
 const IMG_BASE = "/1kR-Webshop/frontend/res/img/";
 
 const cartContent = document.getElementById("cartContent");

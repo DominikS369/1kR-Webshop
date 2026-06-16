@@ -1,4 +1,4 @@
-
+// admin-user.js lässt den Admin die User verwalten wie zb Orders anschauen, bearbeiten, canceln als auch die User Daten anzeigen und deaktivieren.
 const userList = document.getElementById("userTable");
 const messageBox = document.getElementById("messageBox");
 const userModal = document.getElementById("userModal");
