@@ -1,3 +1,5 @@
+//invoice.js lädt und rendert für User die ausgewählte Rechnung und lässt diese auch per Print methode drucken
+
 const invoiceContent = document.getElementById("invoiceContent");
 const messageBox = document.getElementById("messageBox");
 const printBtn = document.getElementById("printBtn");

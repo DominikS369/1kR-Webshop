@@ -1,3 +1,5 @@
+//admin-coupon.js gibt den Admin die Möglichkeit Bestellcoupons zu erstellen und zu laden
+
 const messageBox = document.getElementById("messageBox");
 const couponTable = document.getElementById("couponTable");
 

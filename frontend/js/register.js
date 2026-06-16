@@ -1,3 +1,5 @@
+//register.js lässt den Gast sich in ein Formular eintragen, mit Validierungen, Pflichtfeldern und Checkboxen. Daten gehen mit AJAX Call an Datahandler.php weiter
+
 
 const form = document.getElementById("registerForm");
 const messageBox = document.getElementById("messageBox");

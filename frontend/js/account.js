@@ -1,3 +1,5 @@
+//account.js definiert den User Account mit der Möglichkeit zum Lesen, Erstellen und Löschen der User Dtaen und zeigt auch noch die Bestellhistorie, die ebenfalls einsehbar ist
+
 const IMG_BASE = "/1kR-Webshop/frontend/res/img/";
 
 const ordersList = document.getElementById("ordersList");
