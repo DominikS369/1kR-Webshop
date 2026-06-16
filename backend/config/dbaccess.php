@@ -1,5 +1,25 @@
 <?php // Jeder API-Case erzeugt new DBAccess() und holt sich mit getConnection() die mysqli-Verbindung. dbaccess.php ist somit die Verbindun verbindungsklasse zur DB und datahandler
 
+/*dbconfig.php notwendig
+Für Mac:
+
+<?php
+define("DB_HOST", "localhost");
+define("DB_USER", "root");
+define("DB_PASS", "root");
+define("DB_NAME", "Webshop_1kR");
+define("DB_PORT", 8889);
+
+Für Windows:
+
+<?php
+define("DB_HOST", "localhost");
+define("DB_USER", "root");
+define("DB_PASS", "");
+define("DB_NAME", "Webshop_1kR");
+define("DB_PORT", 3306);
+
+*/
 require_once __DIR__ . "/dbconfig.php";
 
 class DBAccess
