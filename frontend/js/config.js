@@ -1,6 +1,5 @@
 const API_BASE = (function() {
 
-
     const origin = window.location.origin;
     const pathname = window.location.pathname;
 

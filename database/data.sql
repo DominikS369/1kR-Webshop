@@ -11,18 +11,17 @@ CREATE TABLE IF NOT EXISTS users (
     email VARCHAR(150) NOT NULL UNIQUE,
     username VARCHAR(50) NOT NULL UNIQUE,
     password VARCHAR(255) NOT NULL,
-    payment_info TEXT,
     is_admin TINYINT(1) DEFAULT 0,
     is_active TINYINT(1) DEFAULT 1
 );
 
 -- PW: tausendrosen
 
-INSERT INTO users (id, salutation, firstname, lastname, address, zip, city, email, username, password, payment_info, is_admin, is_active) VALUES
-(1, 'Herr', 'Dominik', 'Sommer', 'Spechtgasse 72', '2340', 'Mödling', 'wi24b118@technikum-wien.at', 'Dom', '$2y$10$23MfFcgEKBosPD2sh6rqJ.Pqa.YMr/2nQE8cnuqfFNsYWnvr9TODG', '', 0, 1),
-(2, 'Herr', 'Mika', 'Stermann', 'Hochstädtplatz 4', '1220', 'Wien', 'mika@tausendrosen.at', 'Mika', '$2y$10$OL44P5vs4oA5NZKSMwKjx.FJb0ZlxEtDaxeaaSVCLNC3ZbgOIPcoC', '', 0, 1),
-(3, 'Frau', 'Aylin', 'Karacsonyi', 'Dresdner Straße 9', '1220', 'Wien', 'aylin@tausendrosen.at', 'Aylin', '$2y$10$7WFRpme/j0FyTEZ8GSaRcOrc714l1Ueeon1CQddyphuVLWrryYXoC', '', 0, 1),
-(4, 'Herr', 'Helmuth', 'Lammer', 'Jägerstraße 5', '1220', 'Wien', 'lammer@tausendrosen.at', 'Admin', '$2y$10$iBnQNS5oo03uiCB3slRGhe6IBsZ3OeffDFURoJd3lam4L3wiHZh1S', '', 1, 1);
+INSERT INTO users (id, salutation, firstname, lastname, address, zip, city, email, username, password, is_admin, is_active) VALUES
+(1, 'Herr', 'Dominik', 'Sommer', 'Spechtgasse 72', '2340', 'Mödling', 'wi24b118@technikum-wien.at', 'Dom', '$2y$10$23MfFcgEKBosPD2sh6rqJ.Pqa.YMr/2nQE8cnuqfFNsYWnvr9TODG', 0, 1),
+(2, 'Herr', 'Mika', 'Stermann', 'Hochstädtplatz 4', '1220', 'Wien', 'mika@tausendrosen.at', 'Mika', '$2y$10$OL44P5vs4oA5NZKSMwKjx.FJb0ZlxEtDaxeaaSVCLNC3ZbgOIPcoC', 0, 1),
+(3, 'Frau', 'Aylin', 'Karacsonyi', 'Dresdner Straße 9', '1220', 'Wien', 'aylin@tausendrosen.at', 'Aylin', '$2y$10$7WFRpme/j0FyTEZ8GSaRcOrc714l1Ueeon1CQddyphuVLWrryYXoC', 0, 1),
+(4, 'Herr', 'Helmuth', 'Lammer', 'Jägerstraße 5', '1220', 'Wien', 'lammer@tausendrosen.at', 'Admin', '$2y$10$iBnQNS5oo03uiCB3slRGhe6IBsZ3OeffDFURoJd3lam4L3wiHZh1S', 1, 1);
 
 
 CREATE TABLE IF NOT EXISTS categories (
@@ -84,6 +83,15 @@ CREATE TABLE IF NOT EXISTS user_payment_methods (
     FOREIGN KEY (user_id) REFERENCES users(id),
     UNIQUE KEY uniq_user_method (user_id, method)
 );
+
+INSERT INTO user_payment_methods (user_id, method) VALUES
+(1, 'Kreditkarte'),
+(1, 'PayPal'),
+(2, 'Auf Rechnung'),
+(3, 'PayPal'),
+(3, 'Kreditkarte'),
+(3, 'Auf Rechnung'),
+(4, 'Kreditkarte');
 
 CREATE TABLE IF NOT EXISTS invoices (
     id INT AUTO_INCREMENT PRIMARY KEY,

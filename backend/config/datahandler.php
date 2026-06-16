@@ -98,8 +98,6 @@ switch ($method) {
             }
         }
 
-        $payment_info = implode(", ", $payment_methods);
-
         if ($password !== $password2) {
             sendJson(false, "Passwörter stimmen nicht überein");
         }
@@ -120,12 +118,12 @@ switch ($method) {
 
         $stmt = $conn->prepare("
             INSERT INTO users
-            (salutation, firstname, lastname, address, zip, city, email, username, password, payment_info)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            (salutation, firstname, lastname, address, zip, city, email, username, password)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
         ");
 
         $stmt->bind_param(
-            "ssssssssss",
+            "sssssssss",
             $salutation,
             $firstname,
             $lastname,
@@ -134,8 +132,7 @@ switch ($method) {
             $city,
             $email,
             $username,
-            $hashedPassword,
-            $payment_info
+            $hashedPassword
         );
 
         if ($stmt->execute()) {
@@ -948,7 +945,7 @@ switch ($method) {
         $db = new DBAccess();
         $conn = $db->getConnection();
 
-        $stmt = $conn->prepare("SELECT * from users WHERE id = ?");
+        $stmt = $conn->prepare("SELECT id, salutation, firstname, lastname, address, zip, city, email, username, password, is_admin, is_active FROM users WHERE id = ?");
         $stmt->bind_param("i", $userId);
         $stmt->execute();
         $result = $stmt->get_result();
@@ -1002,6 +999,13 @@ switch ($method) {
 
         if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
             sendJson(false, "Ungültige E-Mail-Adresse");
+        }
+
+        $allowedPaymentMethods = ["Auf Rechnung", "Kreditkarte", "PayPal"];
+        foreach ($paymentMethods as $m) {
+            if (!in_array(trim($m), $allowedPaymentMethods, true)) {
+                sendJson(false, "Ungültige Zahlungsart");
+            }
         }
 
         $db = new DBAccess();
@@ -1206,7 +1210,15 @@ switch ($method) {
         $db = new DBAccess();
         $conn = $db->getConnection();
 
-        $stmt = $conn->prepare("SELECT id, username, firstname, lastname, email, salutation, address, zip, city, payment_info, is_admin, is_active FROM users ORDER BY id DESC");
+        $stmt = $conn->prepare("
+            SELECT u.id, u.username, u.firstname, u.lastname, u.email, u.salutation,
+                   u.address, u.zip, u.city, u.is_admin, u.is_active,
+                   GROUP_CONCAT(pm.method ORDER BY pm.id SEPARATOR ', ') AS payment_methods
+            FROM users u
+            LEFT JOIN user_payment_methods pm ON pm.user_id = u.id
+            GROUP BY u.id
+            ORDER BY u.id DESC
+        ");
         $stmt->execute();
         $result = $stmt->get_result();
 
